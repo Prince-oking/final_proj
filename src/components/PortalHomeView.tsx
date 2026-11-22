@@ -4,12 +4,13 @@ import {
   Camera,
   FileText,
   Search,
+  ShieldCheck,
   UserCheck,
 } from 'lucide-react';
 import type {
+  AuthUser,
   PortalSubmission,
   PortalView,
-  ResidentAccount,
   SubmissionKind,
   SummaryStats,
 } from '../types/portal';
@@ -18,31 +19,24 @@ import { formatDisplayDate } from '../utils/portalLogic';
 import { StatusLabel } from './StatusLabel';
 
 interface PortalHomeViewProps {
-  activeResident: ResidentAccount;
-  submissions: PortalSubmission[];
+  authUser: AuthUser | null;
+  recentSubmissions: PortalSubmission[];
   stats: SummaryStats;
-  onOpenAccountModal: () => void;
   onStartSubmission: (kind: SubmissionKind) => void;
   onTrackReference: (refNumber: string) => void;
   onNavigate: (view: PortalView) => void;
 }
 
 export function PortalHomeView({
-  activeResident,
-  submissions,
+  authUser,
+  recentSubmissions,
   stats,
-  onOpenAccountModal,
   onStartSubmission,
   onTrackReference,
   onNavigate,
 }: PortalHomeViewProps) {
   const [heroImgError, setHeroImgError] = useState(false);
   const [quickRef, setQuickRef] = useState('');
-
-  const recentSubmissions = submissions.slice(0, 6);
-  const residentSubmissions = submissions.filter(
-    (s) => s.residentId === activeResident.id,
-  );
 
   return (
     <div className="space-y-10">
@@ -58,9 +52,9 @@ export function PortalHomeView({
                 Report neighborhood issues and request barangay documents online
               </h1>
               <p className="text-base text-slate-600 leading-relaxed max-w-2xl">
-                Skip the queue at the barangay hall. File community concerns with a
-                photo and street location, request clearances for pickup, and follow
-                every official update using your reference number.
+                Skip the queue at the barangay hall. Sign in as a resident to file
+                concerns with photo evidence and street location, request clearances
+                for pickup, and track every official remark by reference number.
               </p>
             </div>
 
@@ -149,19 +143,33 @@ export function PortalHomeView({
             <span aria-hidden="true">·</span>
             <span>Document Pickup: Window 1</span>
             <span aria-hidden="true">·</span>
-            <span>No online fees or SMS alerts in prototype</span>
+            <span>In-portal updates only</span>
           </div>
 
-          <button
-            type="button"
-            onClick={onOpenAccountModal}
-            className="inline-flex items-center gap-1.5 font-semibold text-blue-800 hover:underline whitespace-nowrap"
-          >
-            <UserCheck className="w-3.5 h-3.5" aria-hidden="true" />
-            <span>
-              Resident: {activeResident.fullName} ({residentSubmissions.length} submitted)
-            </span>
-          </button>
+          {authUser ? (
+            <button
+              type="button"
+              onClick={() =>
+                onNavigate(authUser.role === 'staff' ? 'staff' : 'resident')
+              }
+              className="inline-flex items-center gap-1.5 font-semibold text-blue-800 hover:underline whitespace-nowrap"
+            >
+              <UserCheck className="w-3.5 h-3.5" aria-hidden="true" />
+              <span>
+                {authUser.role === 'staff' ? 'Staff:' : 'Resident:'}{' '}
+                {authUser.fullName}
+              </span>
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => onNavigate('resident')}
+              className="inline-flex items-center gap-1.5 font-semibold text-blue-800 hover:underline whitespace-nowrap"
+            >
+              <UserCheck className="w-3.5 h-3.5" aria-hidden="true" />
+              <span>Resident Sign In / Register</span>
+            </button>
+          )}
         </div>
       </section>
 
@@ -206,7 +214,7 @@ export function PortalHomeView({
         </div>
       </section>
 
-      {/* Recent Community Log + Resident Account Panel */}
+      {/* Recent Community Log + Separate Role Login Panels */}
       <section className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         <div className="lg:col-span-8 bg-white border border-slate-200 rounded-xl overflow-hidden">
           <div className="px-5 py-4 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3">
@@ -263,60 +271,60 @@ export function PortalHomeView({
         </div>
 
         <aside className="lg:col-span-4 space-y-4">
-          <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <h2 className="text-base font-bold text-slate-900">
-                  Active Resident Profile
-                </h2>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  Used to prefill your contact details when filing.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={onOpenAccountModal}
-                className="text-xs font-semibold text-blue-800 hover:underline whitespace-nowrap"
-              >
-                Switch / Register
-              </button>
+          <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-3">
+            <div className="flex items-center gap-2 text-slate-900">
+              <UserCheck className="w-4 h-4 text-blue-800" aria-hidden="true" />
+              <h2 className="text-base font-bold">Resident Portal</h2>
             </div>
-
-            <dl className="space-y-2 text-sm border-t border-slate-200 pt-3">
-              <div className="flex justify-between gap-2">
-                <dt className="text-xs text-slate-500">Name</dt>
-                <dd className="text-xs font-semibold text-slate-900 text-right">
-                  {activeResident.fullName}
-                </dd>
-              </div>
-              <div className="flex justify-between gap-2">
-                <dt className="text-xs text-slate-500">Purok</dt>
-                <dd className="text-xs font-medium text-slate-800 text-right">
-                  {activeResident.purok}
-                </dd>
-              </div>
-              <div className="flex justify-between gap-2">
-                <dt className="text-xs text-slate-500">Address</dt>
-                <dd className="text-xs font-medium text-slate-800 text-right">
-                  {activeResident.address}
-                </dd>
-              </div>
-              <div className="flex justify-between gap-2">
-                <dt className="text-xs text-slate-500">Contact</dt>
-                <dd className="text-xs font-mono text-slate-800 text-right tabular-nums">
-                  {activeResident.phone}
-                </dd>
-              </div>
-            </dl>
+            {authUser?.role === 'resident' ? (
+              <>
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  Signed in as <strong>{authUser.fullName}</strong> ({authUser.purok}).
+                  View your filed submissions or submit a new concern.
+                </p>
+                <div className="flex flex-wrap gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => onNavigate('resident')}
+                    className="min-h-[40px] px-3.5 py-2 text-xs font-semibold text-white bg-blue-800 rounded-lg hover:bg-blue-900 whitespace-nowrap"
+                  >
+                    My Submissions
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onStartSubmission('issue')}
+                    className="min-h-[40px] px-3.5 py-2 text-xs font-semibold text-slate-800 border border-slate-300 rounded-lg hover:bg-slate-50 whitespace-nowrap"
+                  >
+                    File Report
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  Create a resident account or sign in to submit issue reports with
+                  photos and manage your document requests.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => onNavigate('resident')}
+                  className="min-h-[40px] px-4 py-2 text-xs font-semibold text-white bg-blue-800 rounded-lg hover:bg-blue-900 whitespace-nowrap"
+                >
+                  Resident Login / Register
+                </button>
+              </>
+            )}
           </div>
 
           <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-3">
-            <h2 className="text-base font-bold text-slate-900">
-              For Barangay Officials
-            </h2>
+            <div className="flex items-center gap-2 text-slate-900">
+              <ShieldCheck className="w-4 h-4 text-blue-800" aria-hidden="true" />
+              <h2 className="text-base font-bold">Barangay Staff &amp; Summary</h2>
+            </div>
             <p className="text-xs text-slate-600 leading-relaxed">
-              Review incoming resident submissions, attach official remarks, update
-              statuses, and inspect category summaries.
+              {authUser?.role === 'staff'
+                ? `Signed in as ${authUser.fullName} (${authUser.officialTitle}). Manage the submission queue or inspect summary analytics.`
+                : 'Barangay officials sign in separately to review submissions, add remarks, and access summary reports.'}
             </p>
             <div className="flex flex-wrap gap-2 pt-1">
               <button
@@ -324,15 +332,17 @@ export function PortalHomeView({
                 onClick={() => onNavigate('staff')}
                 className="min-h-[40px] px-3.5 py-2 text-xs font-semibold text-slate-900 bg-slate-100 rounded-lg hover:bg-slate-200 whitespace-nowrap"
               >
-                Open Staff Desk
+                {authUser?.role === 'staff' ? 'Open Staff Desk' : 'Barangay Staff Login'}
               </button>
-              <button
-                type="button"
-                onClick={() => onNavigate('summary')}
-                className="min-h-[40px] px-3.5 py-2 text-xs font-semibold text-slate-700 border border-slate-200 rounded-lg hover:bg-slate-50 whitespace-nowrap"
-              >
-                View Summary
-              </button>
+              {authUser?.role === 'staff' && (
+                <button
+                  type="button"
+                  onClick={() => onNavigate('summary')}
+                  className="min-h-[40px] px-3.5 py-2 text-xs font-semibold text-slate-700 border border-slate-300 rounded-lg hover:bg-slate-50 whitespace-nowrap"
+                >
+                  Summary Report
+                </button>
+              )}
             </div>
           </div>
         </aside>

@@ -1,61 +1,74 @@
 import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import { Check, Search, SearchX } from 'lucide-react';
-import type { PortalSubmission, ResidentAccount } from '../types/portal';
+import type { PortalSubmission } from '../types/portal';
 import {
   SUBMISSION_STATUSES,
-  findSubmissionByReference,
   formatDisplayDate,
   formatDisplayDateTime,
 } from '../utils/portalLogic';
+import { trackSubmissionByReference } from '../services/api';
 import { StatusLabel } from './StatusLabel';
 
 interface TrackViewProps {
-  submissions: PortalSubmission[];
-  activeResident: ResidentAccount;
+  token: string | null;
+  quickReferences: string[];
   initialReference: string;
 }
 
 export function TrackView({
-  submissions,
-  activeResident,
+  token,
+  quickReferences,
   initialReference,
 }: TrackViewProps) {
-  const [query, setQuery] = useState(
-    initialReference || submissions[0]?.referenceNumber || '',
-  );
-  const [searchedRef, setSearchedRef] = useState(
-    initialReference || submissions[0]?.referenceNumber || '',
-  );
+  const defaultRef = initialReference || quickReferences[0] || 'BRG-2026-0101';
+  const [query, setQuery] = useState(defaultRef);
+  const [searchedRef, setSearchedRef] = useState(defaultRef);
+  const [match, setMatch] = useState<PortalSubmission | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [notFoundMsg, setNotFoundMsg] = useState('');
   const [imgError, setImgError] = useState(false);
 
-  useEffect(() => {
-    if (initialReference) {
-      setQuery(initialReference);
-      setSearchedRef(initialReference);
-      setImgError(false);
+  const performLookup = async (refToLookup: string) => {
+    const clean = refToLookup.trim();
+    setSearchedRef(clean);
+    setImgError(false);
+    setNotFoundMsg('');
+    if (!clean) {
+      setMatch(null);
+      return;
     }
-  }, [initialReference]);
 
-  const match = findSubmissionByReference(submissions, searchedRef);
+    setLoading(true);
+    try {
+      const res = await trackSubmissionByReference(clean, token);
+      setMatch(res.submission);
+    } catch (err) {
+      setMatch(null);
+      setNotFoundMsg(
+        err instanceof Error ? err.message : `No record found for "${clean}".`,
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const target = initialReference || quickReferences[0] || 'BRG-2026-0101';
+    setQuery(target);
+    void performLookup(target);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialReference]);
 
   const handleSearch = (e: FormEvent) => {
     e.preventDefault();
-    setSearchedRef(query);
-    setImgError(false);
+    void performLookup(query);
   };
 
   const quickSelect = (ref: string) => {
     setQuery(ref);
-    setSearchedRef(ref);
-    setImgError(false);
+    void performLookup(ref);
   };
-
-  const residentOwn = submissions.filter(
-    (s) => s.residentId === activeResident.id,
-  );
-  const quickList =
-    residentOwn.length > 0 ? residentOwn.slice(0, 4) : submissions.slice(0, 4);
 
   const activeStepIndex = match
     ? SUBMISSION_STATUSES.indexOf(match.status)
@@ -98,37 +111,43 @@ export function TrackView({
           </div>
           <button
             type="submit"
-            className="min-h-[44px] px-6 py-2 text-sm font-semibold text-white bg-blue-800 rounded-lg hover:bg-blue-900 transition-colors whitespace-nowrap"
+            disabled={loading}
+            className="min-h-[44px] px-6 py-2 text-sm font-semibold text-white bg-blue-800 rounded-lg hover:bg-blue-900 disabled:opacity-60 transition-colors whitespace-nowrap"
           >
-            Look Up Reference
+            {loading ? 'Searching...' : 'Look Up Reference'}
           </button>
         </form>
 
-        <div className="flex flex-wrap items-center gap-2 pt-1">
-          <span className="text-xs text-slate-500">Quick select:</span>
-          {quickList.map((item) => {
-            const isSelected =
-              match?.referenceNumber === item.referenceNumber;
-            return (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => quickSelect(item.referenceNumber)}
-                className={`px-2.5 py-1 text-xs font-mono rounded-md border transition-colors whitespace-nowrap ${
-                  isSelected
-                    ? 'bg-blue-800 text-white border-blue-800'
-                    : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
-                }`}
-              >
-                {item.referenceNumber}
-              </button>
-            );
-          })}
-        </div>
+        {quickReferences.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2 pt-1">
+            <span className="text-xs text-slate-500">Quick select:</span>
+            {quickReferences.slice(0, 5).map((ref) => {
+              const isSelected = match?.referenceNumber === ref;
+              return (
+                <button
+                  key={ref}
+                  type="button"
+                  onClick={() => quickSelect(ref)}
+                  className={`px-2.5 py-1 text-xs font-mono rounded-md border transition-colors whitespace-nowrap ${
+                    isSelected
+                      ? 'bg-blue-800 text-white border-blue-800'
+                      : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                  }`}
+                >
+                  {ref}
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Result State */}
-      {!searchedRef.trim() ? (
+      {loading ? (
+        <div className="bg-white border border-slate-200 rounded-xl p-10 text-center text-sm text-slate-500">
+          Looking up {searchedRef}...
+        </div>
+      ) : !searchedRef.trim() ? (
         <div className="bg-white border border-slate-200 rounded-xl p-10 text-center space-y-2">
           <p className="text-base font-semibold text-slate-900">
             Enter a reference number above
@@ -146,7 +165,7 @@ export function TrackView({
           />
           <div>
             <p className="text-base font-semibold text-slate-900">
-              No record found for &ldquo;{searchedRef.trim()}&rdquo;
+              {notFoundMsg || `No record found for "${searchedRef.trim()}"`}
             </p>
             <p className="text-sm text-slate-500 mt-1">
               Check the spelling of your reference number or select one of the

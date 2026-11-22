@@ -1,142 +1,83 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type {
-  IssueCategory,
+  AuthUser,
   PortalSubmission,
   PortalView,
-  ResidentAccount,
-  ServiceType,
   SubmissionKind,
-  SubmissionStatus,
-  UrgencyLevel,
+  SummaryStats,
 } from './types/portal';
-import {
-  SAMPLE_RESIDENTS,
-  SEED_SUBMISSIONS,
-  STAFF_OFFICIALS,
-} from './data/seedData';
-import {
-  applyStaffStatusUpdate,
-  computeSummaryStats,
-  generateReferenceNumber,
-} from './utils/portalLogic';
+import { fetchPortalOverview } from './services/api';
 import { HeaderNav } from './components/HeaderNav';
 import { PortalHomeView } from './components/PortalHomeView';
 import { SubmitView } from './components/SubmitView';
 import { TrackView } from './components/TrackView';
+import { ResidentAuthView } from './components/ResidentAuthView';
+import { StaffAuthView } from './components/StaffAuthView';
 import { StaffDashboardView } from './components/StaffDashboardView';
 import { SummaryView } from './components/SummaryView';
 import { DocumentationView } from './components/DocumentationView';
-import { ResidentAccountModal } from './components/ResidentAccountModal';
 
-const STORAGE_KEYS = {
-  submissions: 'bsm_portal_submissions_v1',
-  residents: 'bsm_portal_residents_v1',
-  activeResidentId: 'bsm_portal_active_resident_v1',
+const EMPTY_STATS: SummaryStats = {
+  total: 0,
+  issueCount: 0,
+  serviceCount: 0,
+  byStatus: { Received: 0, 'In Progress': 0, Resolved: 0 },
+  resolutionRatePercent: 0,
+  byCategory: [],
+  byPurok: [],
 };
-
-function loadInitialSubmissions(): PortalSubmission[] {
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEYS.submissions);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        return parsed;
-      }
-    }
-  } catch {
-    // Ignore malformed local storage
-  }
-  return SEED_SUBMISSIONS;
-}
-
-function loadInitialResidents(): ResidentAccount[] {
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEYS.residents);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        return parsed;
-      }
-    }
-  } catch {
-    // Ignore malformed local storage
-  }
-  return SAMPLE_RESIDENTS;
-}
 
 export default function App() {
   const [activeView, setActiveView] = useState<PortalView>('portal');
   const [submitKind, setSubmitKind] = useState<SubmissionKind>('issue');
   const [trackRefTarget, setTrackRefTarget] = useState<string>('');
 
-  const [submissions, setSubmissions] = useState<PortalSubmission[]>(
-    loadInitialSubmissions,
-  );
-  const [residents, setResidents] = useState<ResidentAccount[]>(
-    loadInitialResidents,
-  );
-  const [activeResidentId, setActiveResidentId] = useState<string>(() => {
-    try {
-      return (
-        window.localStorage.getItem(STORAGE_KEYS.activeResidentId) ||
-        SAMPLE_RESIDENTS[0].id
-      );
-    } catch {
-      return SAMPLE_RESIDENTS[0].id;
-    }
-  });
+  // Session Bearer token held strictly in React state (never localStorage/sessionStorage)
+  const [authToken, setAuthToken] = useState<string | null>(null);
+  const [authUser, setAuthUser] = useState<AuthUser | null>(null);
 
-  const [activeOfficialId, setActiveOfficialId] = useState<string>(
-    STAFF_OFFICIALS[0].id,
+  const [recentSubmissions, setRecentSubmissions] = useState<PortalSubmission[]>(
+    [],
   );
-  const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
+  const [overviewStats, setOverviewStats] = useState<SummaryStats>(EMPTY_STATS);
+
+  const loadOverview = useCallback(async () => {
+    try {
+      const data = await fetchPortalOverview();
+      setRecentSubmissions(data.recent);
+      setOverviewStats(data.stats);
+    } catch {
+      // Handled gracefully with empty fallback state
+    }
+  }, []);
 
   useEffect(() => {
-    try {
-      window.localStorage.setItem(
-        STORAGE_KEYS.submissions,
-        JSON.stringify(submissions),
-      );
-    } catch {
-      // Ignore quota errors on large attachments
-    }
-  }, [submissions]);
-
-  useEffect(() => {
-    try {
-      window.localStorage.setItem(
-        STORAGE_KEYS.residents,
-        JSON.stringify(residents),
-      );
-    } catch {
-      // Ignore storage errors
-    }
-  }, [residents]);
-
-  useEffect(() => {
-    try {
-      window.localStorage.setItem(
-        STORAGE_KEYS.activeResidentId,
-        activeResidentId,
-      );
-    } catch {
-      // Ignore storage errors
-    }
-  }, [activeResidentId]);
-
-  const activeResident =
-    residents.find((r) => r.id === activeResidentId) || residents[0];
-  const activeOfficial =
-    STAFF_OFFICIALS.find((o) => o.id === activeOfficialId) || STAFF_OFFICIALS[0];
-
-  const stats = useMemo(
-    () => computeSummaryStats(submissions),
-    [submissions],
-  );
+    void loadOverview();
+  }, [loadOverview]);
 
   const navigateTo = (view: PortalView) => {
     setActiveView(view);
     window.scrollTo(0, 0);
+  };
+
+  const handleAuthenticated = (token: string, user: AuthUser) => {
+    setAuthToken(token);
+    setAuthUser(user);
+    if (user.role === 'staff' && (activeView === 'resident' || activeView === 'portal')) {
+      navigateTo('staff');
+    } else if (user.role === 'resident' && activeView === 'staff') {
+      navigateTo('resident');
+    }
+  };
+
+  const handleSignOut = (redirectView?: PortalView) => {
+    setAuthToken(null);
+    setAuthUser(null);
+    if (typeof redirectView === 'string') {
+      navigateTo(redirectView);
+    } else if (activeView === 'staff' || activeView === 'summary') {
+      navigateTo('portal');
+    }
   };
 
   const handleStartSubmission = (kind: SubmissionKind) => {
@@ -149,141 +90,25 @@ export default function App() {
     navigateTo('track');
   };
 
-  const handleCreateIssue = (payload: {
-    title: string;
-    category: IssueCategory;
-    purok: string;
-    location: string;
-    description: string;
-    urgency: UrgencyLevel;
-    photoDataUrl?: string;
-    photoName?: string;
-  }): PortalSubmission => {
-    const now = new Date().toISOString();
-    const referenceNumber = generateReferenceNumber('issue', submissions, 2026);
-    const created: PortalSubmission = {
-      id: `sub-${Date.now()}`,
-      referenceNumber,
-      kind: 'issue',
-      title: payload.title,
-      category: payload.category,
-      purok: payload.purok,
-      location: payload.location,
-      description: payload.description,
-      urgency: payload.urgency,
-      photoDataUrl: payload.photoDataUrl,
-      photoName: payload.photoName,
-      residentId: activeResident.id,
-      residentName: activeResident.fullName,
-      residentContact: activeResident.phone,
-      status: 'Received',
-      createdAt: now,
-      updatedAt: now,
-      remarks: [
-        {
-          id: `rem-${Date.now()}`,
-          timestamp: now,
-          status: 'Received',
-          authorName: 'Portal Intake',
-          authorRole: 'Barangay Desk',
-          note: payload.photoDataUrl
-            ? 'Issue report received with attached photo evidence and queued for barangay review.'
-            : 'Issue report received and queued for barangay review.',
-        },
-      ],
-    };
-
-    setSubmissions((prev) => [created, ...prev]);
-    return created;
-  };
-
-  const handleCreateService = (payload: {
-    serviceType: ServiceType;
-    purok: string;
-    location: string;
-    purpose: string;
-    preferredPickupDate: string;
-    notes: string;
-  }): PortalSubmission => {
-    const now = new Date().toISOString();
-    const referenceNumber = generateReferenceNumber('service', submissions, 2026);
-    const created: PortalSubmission = {
-      id: `sub-${Date.now()}`,
-      referenceNumber,
-      kind: 'service',
-      title: `${payload.serviceType} — ${payload.purpose}`,
-      category: payload.serviceType,
-      purok: payload.purok,
-      location: payload.location,
-      description:
-        payload.notes ||
-        `Pickup request for ${payload.serviceType} (${payload.purpose}).`,
-      purpose: payload.purpose,
-      preferredPickupDate: payload.preferredPickupDate,
-      residentId: activeResident.id,
-      residentName: activeResident.fullName,
-      residentContact: activeResident.phone,
-      status: 'Received',
-      createdAt: now,
-      updatedAt: now,
-      remarks: [
-        {
-          id: `rem-${Date.now()}`,
-          timestamp: now,
-          status: 'Received',
-          authorName: 'Portal Intake',
-          authorRole: 'Barangay Desk',
-          note: 'Service request logged for Barangay Secretary verification.',
-        },
-      ],
-    };
-
-    setSubmissions((prev) => [created, ...prev]);
-    return created;
-  };
-
-  const handleStaffUpdate = (
-    submissionId: string,
-    nextStatus: SubmissionStatus,
-    remarkNote: string,
-  ) => {
-    setSubmissions((prev) =>
-      applyStaffStatusUpdate(
-        prev,
-        submissionId,
-        nextStatus,
-        remarkNote,
-        activeOfficial,
-      ),
-    );
-  };
-
-  const handleCreateResident = (newResident: ResidentAccount) => {
-    setResidents((prev) => [newResident, ...prev]);
-    setActiveResidentId(newResident.id);
-  };
-
-  const handleResetDemoData = () => {
-    setSubmissions(SEED_SUBMISSIONS);
-    setResidents(SAMPLE_RESIDENTS);
-    setActiveResidentId(SAMPLE_RESIDENTS[0].id);
-  };
+  const quickReferences = recentSubmissions.map((s) => s.referenceNumber);
+  const isStaff = authUser?.role === 'staff' && Boolean(authToken);
 
   return (
     <div className="min-h-screen flex flex-col bg-[#F7F8FA] text-slate-900">
       <HeaderNav
         activeView={activeView}
+        authUser={authUser}
         onNavigate={navigateTo}
         onStartReport={() => handleStartSubmission('issue')}
+        onSignOut={() => handleSignOut()}
       />
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 pb-24 md:pb-12">
         {activeView === 'portal' && (
           <PortalHomeView
-            activeResident={activeResident}
-            submissions={submissions}
-            stats={stats}
-            onOpenAccountModal={() => setIsAccountModalOpen(true)}
+            authUser={authUser}
+            recentSubmissions={recentSubmissions}
+            stats={overviewStats}
             onStartSubmission={handleStartSubmission}
             onTrackReference={handleTrackReference}
             onNavigate={navigateTo}
@@ -292,38 +117,70 @@ export default function App() {
 
         {activeView === 'submit' && (
           <SubmitView
-            key={submitKind}
+            key={`${submitKind}-${authUser?.id || 'anon'}`}
             initialKind={submitKind}
-            activeResident={activeResident}
-            onOpenAccountModal={() => setIsAccountModalOpen(true)}
-            onSubmitIssue={handleCreateIssue}
-            onSubmitService={handleCreateService}
+            authUser={authUser}
+            token={authToken}
+            onAuthenticated={handleAuthenticated}
+            onSignOut={() => handleSignOut()}
+            onSubmissionCreated={() => void loadOverview()}
             onTrackReference={handleTrackReference}
+            onGoToStaffLogin={() => navigateTo('staff')}
           />
         )}
 
         {activeView === 'track' && (
           <TrackView
-            submissions={submissions}
-            activeResident={activeResident}
+            token={authToken}
+            quickReferences={quickReferences}
             initialReference={trackRefTarget}
           />
         )}
 
-        {activeView === 'staff' && (
-          <StaffDashboardView
-            submissions={submissions}
-            officials={STAFF_OFFICIALS}
-            activeOfficialId={activeOfficial.id}
-            onSelectOfficial={setActiveOfficialId}
-            onUpdateSubmission={handleStaffUpdate}
-            onResetDemoData={handleResetDemoData}
+        {activeView === 'resident' && (
+          <ResidentAuthView
+            authUser={authUser}
+            token={authToken}
+            onAuthenticated={handleAuthenticated}
+            onSignOut={() => handleSignOut('resident')}
+            onStartSubmission={handleStartSubmission}
+            onTrackReference={handleTrackReference}
+            onGoToStaffLogin={() => navigateTo('staff')}
           />
         )}
 
-        {activeView === 'summary' && (
-          <SummaryView submissions={submissions} stats={stats} />
-        )}
+        {activeView === 'staff' &&
+          (isStaff && authUser && authToken ? (
+            <StaffDashboardView
+              authUser={authUser}
+              token={authToken}
+              onOpenSummary={() => navigateTo('summary')}
+              onSubmissionsChanged={() => void loadOverview()}
+            />
+          ) : (
+            <StaffAuthView
+              authUser={authUser}
+              onAuthenticated={handleAuthenticated}
+              onSignOut={() => handleSignOut('staff')}
+              onGoToResidentLogin={() => navigateTo('resident')}
+            />
+          ))}
+
+        {activeView === 'summary' &&
+          (isStaff && authUser && authToken ? (
+            <SummaryView
+              authUser={authUser}
+              token={authToken}
+              onOpenStaffDesk={() => navigateTo('staff')}
+            />
+          ) : (
+            <StaffAuthView
+              authUser={authUser}
+              onAuthenticated={handleAuthenticated}
+              onSignOut={() => handleSignOut('staff')}
+              onGoToResidentLogin={() => navigateTo('resident')}
+            />
+          ))}
 
         {activeView === 'manual' && (
           <DocumentationView onNavigate={navigateTo} />
@@ -341,27 +198,25 @@ export default function App() {
               onClick={() => navigateTo('manual')}
               className="hover:text-slate-900 underline underline-offset-2"
             >
-              User Manual &amp; Scope
+              User Manual &amp; XAMPP Setup
             </button>
             <button
               type="button"
-              onClick={() => setIsAccountModalOpen(true)}
+              onClick={() => navigateTo('resident')}
               className="hover:text-slate-900 underline underline-offset-2"
             >
-              Switch Resident ({activeResident.fullName})
+              Resident Login
+            </button>
+            <button
+              type="button"
+              onClick={() => navigateTo('staff')}
+              className="hover:text-slate-900 underline underline-offset-2"
+            >
+              Barangay Staff Login
             </button>
           </div>
         </div>
       </footer>
-
-      <ResidentAccountModal
-        isOpen={isAccountModalOpen}
-        residents={residents}
-        activeResidentId={activeResident.id}
-        onSelectResident={setActiveResidentId}
-        onCreateResident={handleCreateResident}
-        onClose={() => setIsAccountModalOpen(false)}
-      />
     </div>
   );
 }

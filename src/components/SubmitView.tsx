@@ -11,9 +11,9 @@ import {
   Wrench,
 } from 'lucide-react';
 import type {
+  AuthUser,
   IssueCategory,
   PortalSubmission,
-  ResidentAccount,
   ServiceType,
   SubmissionKind,
   UrgencyLevel,
@@ -25,51 +25,46 @@ import {
   validateIssueReport,
   validateServiceRequest,
 } from '../utils/portalLogic';
+import {
+  createIssueSubmission,
+  createServiceSubmission,
+} from '../services/api';
 import { PhotoAttachmentField } from './PhotoAttachmentField';
+import { ResidentAuthView } from './ResidentAuthView';
 
 interface SubmitViewProps {
   initialKind: SubmissionKind;
-  activeResident: ResidentAccount;
-  onOpenAccountModal: () => void;
-  onSubmitIssue: (payload: {
-    title: string;
-    category: IssueCategory;
-    purok: string;
-    location: string;
-    description: string;
-    urgency: UrgencyLevel;
-    photoDataUrl?: string;
-    photoName?: string;
-  }) => PortalSubmission;
-  onSubmitService: (payload: {
-    serviceType: ServiceType;
-    purok: string;
-    location: string;
-    purpose: string;
-    preferredPickupDate: string;
-    notes: string;
-  }) => PortalSubmission;
+  authUser: AuthUser | null;
+  token: string | null;
+  onAuthenticated: (token: string, user: AuthUser) => void;
+  onSignOut: () => void;
+  onSubmissionCreated: (created: PortalSubmission) => void;
   onTrackReference: (referenceNumber: string) => void;
+  onGoToStaffLogin: () => void;
 }
 
 export function SubmitView({
   initialKind,
-  activeResident,
-  onOpenAccountModal,
-  onSubmitIssue,
-  onSubmitService,
+  authUser,
+  token,
+  onAuthenticated,
+  onSignOut,
+  onSubmissionCreated,
   onTrackReference,
+  onGoToStaffLogin,
 }: SubmitViewProps) {
   const [kind, setKind] = useState<SubmissionKind>(initialKind);
   const [submittedRecord, setSubmittedRecord] = useState<PortalSubmission | null>(
     null,
   );
   const [copiedRef, setCopiedRef] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
 
   // Issue Report State
   const [issueTitle, setIssueTitle] = useState('');
   const [issueCategory, setIssueCategory] = useState<IssueCategory | ''>('');
-  const [issuePurok, setIssuePurok] = useState(activeResident.purok);
+  const [issuePurok, setIssuePurok] = useState(authUser?.purok || PUROK_LIST[0]);
   const [issueLocation, setIssueLocation] = useState('');
   const [issueUrgency, setIssueUrgency] = useState<UrgencyLevel>('Medium');
   const [issueDescription, setIssueDescription] = useState('');
@@ -79,8 +74,10 @@ export function SubmitView({
 
   // Service Request State
   const [serviceType, setServiceType] = useState<ServiceType | ''>('');
-  const [servicePurok, setServicePurok] = useState(activeResident.purok);
-  const [serviceLocation, setServiceLocation] = useState(activeResident.address);
+  const [servicePurok, setServicePurok] = useState(
+    authUser?.purok || PUROK_LIST[0],
+  );
+  const [serviceLocation, setServiceLocation] = useState(authUser?.address || '');
   const [servicePurpose, setServicePurpose] = useState('');
   const [preferredPickupDate, setPreferredPickupDate] = useState(() => {
     const next = new Date();
@@ -90,8 +87,24 @@ export function SubmitView({
   const [serviceNotes, setServiceNotes] = useState('');
   const [serviceErrors, setServiceErrors] = useState<Record<string, string>>({});
 
-  const handleIssueSubmit = (e: FormEvent) => {
+  if (!authUser || !token) {
+    return (
+      <ResidentAuthView
+        authUser={authUser}
+        token={token}
+        onAuthenticated={onAuthenticated}
+        onSignOut={onSignOut}
+        onStartSubmission={() => {}}
+        onTrackReference={onTrackReference}
+        onGoToStaffLogin={onGoToStaffLogin}
+        noticeText="Sign in or create a resident account first so your report or document request is recorded under your profile."
+      />
+    );
+  }
+
+  const handleIssueSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    setSubmitError('');
     const result = validateIssueReport({
       title: issueTitle,
       category: issueCategory,
@@ -108,31 +121,45 @@ export function SubmitView({
       return;
     }
 
-    const created = onSubmitIssue({
-      title: issueTitle.trim(),
-      category: issueCategory,
-      purok: issuePurok,
-      location: issueLocation.trim(),
-      description: issueDescription.trim(),
-      urgency: issueUrgency,
-      photoDataUrl,
-      photoName,
-    });
+    setIsSubmitting(true);
+    try {
+      const { submission } = await createIssueSubmission(
+        {
+          title: issueTitle.trim(),
+          category: issueCategory,
+          purok: issuePurok,
+          location: issueLocation.trim(),
+          description: issueDescription.trim(),
+          urgency: issueUrgency,
+          photoDataUrl,
+          photoName,
+        },
+        token,
+      );
 
-    setIssueTitle('');
-    setIssueCategory('');
-    setIssueLocation('');
-    setIssueDescription('');
-    setIssueUrgency('Medium');
-    setPhotoDataUrl(undefined);
-    setPhotoName(undefined);
-    setIssueErrors({});
-    setCopiedRef(false);
-    setSubmittedRecord(created);
+      setIssueTitle('');
+      setIssueCategory('');
+      setIssueLocation('');
+      setIssueDescription('');
+      setIssueUrgency('Medium');
+      setPhotoDataUrl(undefined);
+      setPhotoName(undefined);
+      setIssueErrors({});
+      setCopiedRef(false);
+      setSubmittedRecord(submission);
+      onSubmissionCreated(submission);
+    } catch (err) {
+      setSubmitError(
+        err instanceof Error ? err.message : 'Unable to submit issue report.',
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const handleServiceSubmit = (e: FormEvent) => {
+  const handleServiceSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    setSubmitError('');
     const result = validateServiceRequest({
       serviceType,
       purok: servicePurok,
@@ -147,21 +174,34 @@ export function SubmitView({
       return;
     }
 
-    const created = onSubmitService({
-      serviceType,
-      purok: servicePurok,
-      location: serviceLocation.trim(),
-      purpose: servicePurpose.trim(),
-      preferredPickupDate,
-      notes: serviceNotes.trim(),
-    });
+    setIsSubmitting(true);
+    try {
+      const { submission } = await createServiceSubmission(
+        {
+          serviceType,
+          purok: servicePurok,
+          location: serviceLocation.trim(),
+          purpose: servicePurpose.trim(),
+          preferredPickupDate,
+          notes: serviceNotes.trim(),
+        },
+        token,
+      );
 
-    setServiceType('');
-    setServicePurpose('');
-    setServiceNotes('');
-    setServiceErrors({});
-    setCopiedRef(false);
-    setSubmittedRecord(created);
+      setServiceType('');
+      setServicePurpose('');
+      setServiceNotes('');
+      setServiceErrors({});
+      setCopiedRef(false);
+      setSubmittedRecord(submission);
+      onSubmissionCreated(submission);
+    } catch (err) {
+      setSubmitError(
+        err instanceof Error ? err.message : 'Unable to submit service request.',
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleCopyRef = async (ref: string) => {
@@ -281,14 +321,10 @@ export function SubmitView({
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={onOpenAccountModal}
-          className="min-h-[42px] inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold text-slate-800 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 whitespace-nowrap self-start sm:self-auto"
-        >
+        <div className="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold text-slate-800 bg-white border border-slate-200 rounded-lg self-start sm:self-auto">
           <UserCheck className="w-4 h-4 text-blue-800" aria-hidden="true" />
-          <span>Filing as: {activeResident.fullName}</span>
-        </button>
+          <span>Filing as: {authUser.fullName}</span>
+        </div>
       </div>
 
       {/* Mode Switcher */}
@@ -301,7 +337,10 @@ export function SubmitView({
           type="button"
           role="tab"
           aria-selected={kind === 'issue'}
-          onClick={() => setKind('issue')}
+          onClick={() => {
+            setKind('issue');
+            setSubmitError('');
+          }}
           className={`min-h-[44px] inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg transition-colors whitespace-nowrap ${
             kind === 'issue'
               ? 'bg-white text-slate-900 shadow-sm'
@@ -315,7 +354,10 @@ export function SubmitView({
           type="button"
           role="tab"
           aria-selected={kind === 'service'}
-          onClick={() => setKind('service')}
+          onClick={() => {
+            setKind('service');
+            setSubmitError('');
+          }}
           className={`min-h-[44px] inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg transition-colors whitespace-nowrap ${
             kind === 'service'
               ? 'bg-white text-slate-900 shadow-sm'
@@ -326,6 +368,16 @@ export function SubmitView({
           <span>Service Request</span>
         </button>
       </div>
+
+      {submitError && (
+        <div
+          role="alert"
+          className="p-3.5 rounded-lg bg-red-50 border border-red-200 text-xs font-medium text-red-800 flex items-center gap-2"
+        >
+          <AlertCircle className="w-4 h-4 shrink-0" aria-hidden="true" />
+          <span>{submitError}</span>
+        </div>
+      )}
 
       {kind === 'issue' ? (
         <form
@@ -490,13 +542,14 @@ export function SubmitView({
 
           <div className="pt-4 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <p className="text-xs text-slate-500">
-              Submitted under {activeResident.fullName} ({activeResident.phone})
+              Submitted under {authUser.fullName} ({authUser.phone || authUser.email})
             </p>
             <button
               type="submit"
-              className="min-h-[44px] px-6 py-2.5 text-sm font-semibold text-white bg-blue-800 rounded-lg hover:bg-blue-900 transition-colors whitespace-nowrap"
+              disabled={isSubmitting}
+              className="min-h-[44px] px-6 py-2.5 text-sm font-semibold text-white bg-blue-800 rounded-lg hover:bg-blue-900 disabled:opacity-60 transition-colors whitespace-nowrap"
             >
-              Submit Issue Report
+              {isSubmitting ? 'Submitting...' : 'Submit Issue Report'}
             </button>
           </div>
         </form>
@@ -659,13 +712,14 @@ export function SubmitView({
 
           <div className="pt-4 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <p className="text-xs text-slate-500">
-              Applicant: {activeResident.fullName} ({activeResident.phone})
+              Applicant: {authUser.fullName} ({authUser.phone || authUser.email})
             </p>
             <button
               type="submit"
-              className="min-h-[44px] px-6 py-2.5 text-sm font-semibold text-white bg-blue-800 rounded-lg hover:bg-blue-900 transition-colors whitespace-nowrap"
+              disabled={isSubmitting}
+              className="min-h-[44px] px-6 py-2.5 text-sm font-semibold text-white bg-blue-800 rounded-lg hover:bg-blue-900 disabled:opacity-60 transition-colors whitespace-nowrap"
             >
-              Submit Service Request
+              {isSubmitting ? 'Submitting...' : 'Submit Service Request'}
             </button>
           </div>
         </form>

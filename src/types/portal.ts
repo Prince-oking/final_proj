@@ -2,9 +2,12 @@ export type PortalView =
   | 'portal'
   | 'submit'
   | 'track'
+  | 'resident'
   | 'staff'
   | 'summary'
   | 'manual';
+
+export type AuthRole = 'resident' | 'staff';
 
 export type SubmissionKind = 'issue' | 'service';
 
@@ -28,6 +31,17 @@ export type ServiceType =
   | 'Certificate of Indigency'
   | 'Business Clearance Endorsement'
   | 'Good Moral Certificate';
+
+export interface AuthUser {
+  id: string;
+  role: AuthRole;
+  fullName: string;
+  email: string;
+  purok: string;
+  address: string;
+  phone: string;
+  officialTitle: string;
+}
 
 export interface ResidentAccount {
   id: string;

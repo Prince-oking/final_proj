@@ -1,13 +1,69 @@
-import { Download, Printer } from 'lucide-react';
-import type { PortalSubmission, SummaryStats } from '../types/portal';
+import { useEffect, useState } from 'react';
+import { ClipboardList, Download, Printer } from 'lucide-react';
+import type { AuthUser, PortalSubmission, SummaryStats } from '../types/portal';
 import { generateSummaryCsv } from '../utils/portalLogic';
+import { fetchStaffSummary } from '../services/api';
 
 interface SummaryViewProps {
-  submissions: PortalSubmission[];
-  stats: SummaryStats;
+  authUser: AuthUser;
+  token: string;
+  onOpenStaffDesk: () => void;
 }
 
-export function SummaryView({ submissions, stats }: SummaryViewProps) {
+export function SummaryView({
+  authUser,
+  token,
+  onOpenStaffDesk,
+}: SummaryViewProps) {
+  const [stats, setStats] = useState<SummaryStats | null>(null);
+  const [submissions, setSubmissions] = useState<PortalSubmission[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [errorMsg, setErrorMsg] = useState('');
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setErrorMsg('');
+    fetchStaffSummary(token)
+      .then((res) => {
+        if (!cancelled) {
+          setStats(res.stats);
+          setSubmissions(res.submissions);
+        }
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setErrorMsg(
+            err instanceof Error ? err.message : 'Unable to load summary report.',
+          );
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [token]);
+
+  if (loading) {
+    return (
+      <div className="bg-white border border-slate-200 rounded-xl p-10 text-center text-sm text-slate-500">
+        Loading barangay summary report...
+      </div>
+    );
+  }
+
+  if (errorMsg || !stats) {
+    return (
+      <div className="bg-white border border-slate-200 rounded-xl p-8 text-center space-y-3">
+        <p className="text-sm font-semibold text-red-700">
+          {errorMsg || 'Summary data unavailable.'}
+        </p>
+      </div>
+    );
+  }
+
   const maxCategoryCount = Math.max(
     1,
     ...stats.byCategory.map((c) => c.count),
@@ -56,16 +112,27 @@ export function SummaryView({ submissions, stats }: SummaryViewProps) {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
+          <p className="text-xs font-semibold text-blue-800 mb-1">
+            Barangay Staff Decision Support · {authUser.fullName}
+          </p>
           <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
-            Admin Summary &amp; Priority Overview
+            Barangay Summary Report
           </h1>
           <p className="text-sm text-slate-600 mt-1">
-            Aggregated counts by category, status, and purok to help barangay officials
-            prioritize field action.
+            Aggregated counts by category, status, and purok to help barangay
+            officials prioritize field action.
           </p>
         </div>
 
         <div className="no-print flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={onOpenStaffDesk}
+            className="min-h-[42px] inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold text-slate-800 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 whitespace-nowrap"
+          >
+            <ClipboardList className="w-4 h-4" aria-hidden="true" />
+            <span>Back to Staff Desk</span>
+          </button>
           <button
             type="button"
             onClick={handleExportCsv}
@@ -121,7 +188,6 @@ export function SummaryView({ submissions, stats }: SummaryViewProps) {
 
       {/* Breakdown Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Category Breakdown */}
         <section className="lg:col-span-7 bg-white border border-slate-200 rounded-xl p-5 sm:p-6 space-y-5">
           <div>
             <h2 className="text-base font-bold text-slate-900">
@@ -164,7 +230,6 @@ export function SummaryView({ submissions, stats }: SummaryViewProps) {
           </div>
         </section>
 
-        {/* Status & Purok Breakdown */}
         <div className="lg:col-span-5 space-y-6">
           <section className="bg-white border border-slate-200 rounded-xl p-5 sm:p-6 space-y-4">
             <div>
