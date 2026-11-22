@@ -1,0 +1,6 @@
+{
+  "name": "Barangay San Miguel Portal",
+  "description": "Web-based community issue reporting, service request, reference tracking, staff workflow, and summary analytics portal for Barangay San Miguel.",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
