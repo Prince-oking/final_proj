@@ -16,6 +16,8 @@ import { StaffAuthView } from './components/StaffAuthView';
 import { StaffDashboardView } from './components/StaffDashboardView';
 import { SummaryView } from './components/SummaryView';
 import { DocumentationView } from './components/DocumentationView';
+import { SiteFooter } from './components/SiteFooter';
+import { useMotionObserver } from './utils/useMotionObserver';
 
 const EMPTY_STATS: SummaryStats = {
   total: 0,
@@ -40,6 +42,27 @@ export default function App() {
     [],
   );
   const [overviewStats, setOverviewStats] = useState<SummaryStats>(EMPTY_STATS);
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    if (typeof document !== 'undefined' && document.documentElement.classList.contains('dark')) {
+      return 'dark';
+    }
+    return 'light';
+  });
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', theme === 'dark');
+    try {
+      localStorage.setItem('barangay-theme', theme);
+    } catch {
+      // Ignore storage failures in restricted contexts
+    }
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
+  };
+
+  useMotionObserver(activeView);
 
   const loadOverview = useCallback(async () => {
     try {
@@ -63,7 +86,10 @@ export default function App() {
   const handleAuthenticated = (token: string, user: AuthUser) => {
     setAuthToken(token);
     setAuthUser(user);
-    if (user.role === 'staff' && (activeView === 'resident' || activeView === 'portal')) {
+    if (
+      user.role === 'staff' &&
+      (activeView === 'resident' || activeView === 'portal')
+    ) {
       navigateTo('staff');
     } else if (user.role === 'resident' && activeView === 'staff') {
       navigateTo('resident');
@@ -94,7 +120,7 @@ export default function App() {
   const isStaff = authUser?.role === 'staff' && Boolean(authToken);
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F7F8FA] text-slate-900">
+    <div className="min-h-screen flex flex-col editorial-paper text-[#1F241D] dark:text-[#F2F0EA]">
       <HeaderNav
         activeView={activeView}
         authUser={authUser}
@@ -103,8 +129,8 @@ export default function App() {
         onSignOut={() => handleSignOut()}
       />
 
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 pb-24 md:pb-12">
-        {activeView === 'portal' && (
+      {activeView === 'portal' ? (
+        <main key={activeView} className="flex-1 w-full view-enter">
           <PortalHomeView
             authUser={authUser}
             recentSubmissions={recentSubmissions}
@@ -112,111 +138,90 @@ export default function App() {
             onStartSubmission={handleStartSubmission}
             onTrackReference={handleTrackReference}
             onNavigate={navigateTo}
-          />
-        )}
-
-        {activeView === 'submit' && (
-          <SubmitView
-            key={`${submitKind}-${authUser?.id || 'anon'}`}
-            initialKind={submitKind}
-            authUser={authUser}
-            token={authToken}
-            onAuthenticated={handleAuthenticated}
             onSignOut={() => handleSignOut()}
-            onSubmissionCreated={() => void loadOverview()}
-            onTrackReference={handleTrackReference}
-            onGoToStaffLogin={() => navigateTo('staff')}
           />
-        )}
-
-        {activeView === 'track' && (
-          <TrackView
-            token={authToken}
-            quickReferences={quickReferences}
-            initialReference={trackRefTarget}
-          />
-        )}
-
-        {activeView === 'resident' && (
-          <ResidentAuthView
-            authUser={authUser}
-            token={authToken}
-            onAuthenticated={handleAuthenticated}
-            onSignOut={() => handleSignOut('resident')}
-            onStartSubmission={handleStartSubmission}
-            onTrackReference={handleTrackReference}
-            onGoToStaffLogin={() => navigateTo('staff')}
-          />
-        )}
-
-        {activeView === 'staff' &&
-          (isStaff && authUser && authToken ? (
-            <StaffDashboardView
+        </main>
+      ) : (
+        <main key={activeView} className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 pb-20 md:pb-14 view-enter">
+          {activeView === 'submit' && (
+            <SubmitView
+              key={`${submitKind}-${authUser?.id || 'anon'}`}
+              initialKind={submitKind}
               authUser={authUser}
               token={authToken}
-              onOpenSummary={() => navigateTo('summary')}
-              onSubmissionsChanged={() => void loadOverview()}
-            />
-          ) : (
-            <StaffAuthView
-              authUser={authUser}
               onAuthenticated={handleAuthenticated}
-              onSignOut={() => handleSignOut('staff')}
-              onGoToResidentLogin={() => navigateTo('resident')}
+              onSignOut={() => handleSignOut()}
+              onSubmissionCreated={() => void loadOverview()}
+              onTrackReference={handleTrackReference}
+              onGoToStaffLogin={() => navigateTo('staff')}
             />
-          ))}
+          )}
 
-        {activeView === 'summary' &&
-          (isStaff && authUser && authToken ? (
-            <SummaryView
+          {activeView === 'track' && (
+            <TrackView
+              token={authToken}
+              quickReferences={quickReferences}
+              initialReference={trackRefTarget}
+            />
+          )}
+
+          {activeView === 'resident' && (
+            <ResidentAuthView
               authUser={authUser}
               token={authToken}
-              onOpenStaffDesk={() => navigateTo('staff')}
-            />
-          ) : (
-            <StaffAuthView
-              authUser={authUser}
               onAuthenticated={handleAuthenticated}
-              onSignOut={() => handleSignOut('staff')}
-              onGoToResidentLogin={() => navigateTo('resident')}
+              onSignOut={() => handleSignOut('resident')}
+              onStartSubmission={handleStartSubmission}
+              onTrackReference={handleTrackReference}
+              onGoToStaffLogin={() => navigateTo('staff')}
             />
-          ))}
+          )}
 
-        {activeView === 'manual' && (
-          <DocumentationView onNavigate={navigateTo} />
-        )}
-      </main>
+          {activeView === 'staff' &&
+            (isStaff && authUser && authToken ? (
+              <StaffDashboardView
+                authUser={authUser}
+                token={authToken}
+                onOpenSummary={() => navigateTo('summary')}
+                onSubmissionsChanged={() => void loadOverview()}
+              />
+            ) : (
+              <StaffAuthView
+                authUser={authUser}
+                onAuthenticated={handleAuthenticated}
+                onSignOut={() => handleSignOut('staff')}
+                onGoToResidentLogin={() => navigateTo('resident')}
+              />
+            ))}
 
-      <footer className="no-print border-t border-slate-200 bg-white mb-14 md:mb-0">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-slate-500">
-          <p>
-            Barangay San Miguel Report &amp; Request Portal · Community Services Desk
-          </p>
-          <div className="flex flex-wrap items-center gap-4">
-            <button
-              type="button"
-              onClick={() => navigateTo('manual')}
-              className="hover:text-slate-900 underline underline-offset-2"
-            >
-              User Manual &amp; XAMPP Setup
-            </button>
-            <button
-              type="button"
-              onClick={() => navigateTo('resident')}
-              className="hover:text-slate-900 underline underline-offset-2"
-            >
-              Resident Login
-            </button>
-            <button
-              type="button"
-              onClick={() => navigateTo('staff')}
-              className="hover:text-slate-900 underline underline-offset-2"
-            >
-              Barangay Staff Login
-            </button>
-          </div>
-        </div>
-      </footer>
+          {activeView === 'summary' &&
+            (isStaff && authUser && authToken ? (
+              <SummaryView
+                authUser={authUser}
+                token={authToken}
+                onOpenStaffDesk={() => navigateTo('staff')}
+              />
+            ) : (
+              <StaffAuthView
+                authUser={authUser}
+                onAuthenticated={handleAuthenticated}
+                onSignOut={() => handleSignOut('staff')}
+                onGoToResidentLogin={() => navigateTo('resident')}
+              />
+            ))}
+
+          {activeView === 'manual' && (
+            <DocumentationView onNavigate={navigateTo} />
+          )}
+        </main>
+      )}
+
+      <SiteFooter
+        theme={theme}
+        onToggleTheme={toggleTheme}
+        onNavigate={navigateTo}
+        onStartSubmission={handleStartSubmission}
+      />
     </div>
   );
 }

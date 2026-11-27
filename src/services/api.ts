@@ -179,7 +179,12 @@ export function fetchStaffSubmissions(token: string) {
 
 export function updateSubmissionStatusApi(
   submissionId: string,
-  payload: { status: SubmissionStatus; remarkNote: string },
+  payload: {
+    status: SubmissionStatus;
+    remarkNote: string;
+    photoDataUrl?: string;
+    photoName?: string;
+  },
   token: string,
 ) {
   return requestJson<{ submission: PortalSubmission }>(

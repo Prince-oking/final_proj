@@ -536,9 +536,22 @@ async function startServer() {
       const submissionId = String(req.params.id || '');
       const nextStatus = String(req.body?.status ?? '') as SubmissionStatus;
       const remarkNote = String(req.body?.remarkNote ?? '').trim();
+      const photoDataUrl = req.body?.photoDataUrl
+        ? String(req.body.photoDataUrl)
+        : undefined;
+      const photoName = req.body?.photoName
+        ? String(req.body.photoName).trim().slice(0, 180)
+        : undefined;
 
       if (!SUBMISSION_STATUSES.includes(nextStatus)) {
         res.status(400).json({ error: 'Invalid submission status.' });
+        return;
+      }
+
+      if (!isSafePhotoAttachment(photoDataUrl)) {
+        res.status(400).json({
+          error: 'Unsupported photo format. Attach a JPG, PNG, or WebP image.',
+        });
         return;
       }
 
@@ -554,6 +567,8 @@ async function startServer() {
           remarkNote.length > 0
             ? remarkNote
             : `Status updated to ${nextStatus} by ${staffUser.fullName}.`,
+        photoDataUrl,
+        photoName,
       };
 
       const updated = await repo.updateSubmissionStatus(

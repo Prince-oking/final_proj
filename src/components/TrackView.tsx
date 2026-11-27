@@ -75,29 +75,31 @@ export function TrackView({
     : -1;
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6">
-      <div className="space-y-1">
-        <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
-          Track Report or Request Status
-        </h1>
-        <p className="text-sm text-slate-600">
-          Enter your reference number to inspect current barangay handling status,
-          attached photo, and official remarks.
-        </p>
-      </div>
+    <div className="max-w-5xl mx-auto space-y-8">
+      {/* Minimal Centered Lookup Header */}
+      <div className="max-w-2xl mx-auto text-center space-y-4">
+        <div className="space-y-1.5">
+          <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#8D1B22] dark:text-[#E5989B]">
+            Public Reference Tracker
+          </p>
+          <h1 className="font-display text-3xl sm:text-4xl font-extrabold text-[#1F241D] dark:text-[#F2F0EA] tracking-tight [text-wrap:balance]">
+            Track Report or Request Status
+          </h1>
+          <p className="text-sm text-[#565A51] dark:text-[#B4B9AE]">
+            Inspect live barangay handling progress, photo evidence, and official remarks.
+          </p>
+        </div>
 
-      {/* Lookup Bar */}
-      <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
         <form
           onSubmit={handleSearch}
-          className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3"
+          className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 bg-white dark:bg-[#1C221B] border border-[#1F241D]/15 dark:border-white/15 rounded-2xl sm:rounded-full p-1.5 shadow-xs"
         >
           <label htmlFor="track-ref-input" className="sr-only">
             Reference Number
           </label>
           <div className="relative flex-1">
             <Search
-              className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"
+              className="w-4 h-4 text-[#565A51] dark:text-[#B4B9AE] absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none"
               aria-hidden="true"
             />
             <input
@@ -105,22 +107,22 @@ export function TrackView({
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="e.g., BRG-2026-0101 or REQ-2026-0102"
-              className="w-full min-h-[44px] pl-10 pr-4 py-2 text-sm font-mono bg-slate-50 border border-slate-300 rounded-lg placeholder:font-sans focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-700"
+              placeholder="BRG-2026-0101 or REQ-2026-0102"
+              className="w-full min-h-[42px] pl-10 pr-4 py-2 text-sm font-mono bg-transparent text-[#1F241D] dark:text-[#F2F0EA] rounded-full placeholder:font-sans placeholder:text-[#565A51] dark:placeholder:text-[#989E91] focus:outline-none"
             />
           </div>
           <button
             type="submit"
             disabled={loading}
-            className="min-h-[44px] px-6 py-2 text-sm font-semibold text-white bg-blue-800 rounded-lg hover:bg-blue-900 disabled:opacity-60 transition-colors whitespace-nowrap"
+            className="min-h-[42px] px-6 py-2 rounded-xl sm:rounded-full text-xs font-bold uppercase tracking-wider text-white bg-[#8D1B22] hover:bg-[#701319] transition-colors disabled:opacity-60 whitespace-nowrap"
           >
-            {loading ? 'Searching...' : 'Look Up Reference'}
+            {loading ? 'Searching...' : 'Look Up'}
           </button>
         </form>
 
         {quickReferences.length > 0 && (
-          <div className="flex flex-wrap items-center gap-2 pt-1">
-            <span className="text-xs text-slate-500">Quick select:</span>
+          <div className="flex flex-wrap items-center justify-center gap-1.5 pt-1">
+            <span className="text-xs text-[#565A51] dark:text-[#B4B9AE] mr-1">Recent:</span>
             {quickReferences.slice(0, 5).map((ref) => {
               const isSelected = match?.referenceNumber === ref;
               return (
@@ -128,10 +130,10 @@ export function TrackView({
                   key={ref}
                   type="button"
                   onClick={() => quickSelect(ref)}
-                  className={`px-2.5 py-1 text-xs font-mono rounded-md border transition-colors whitespace-nowrap ${
+                  className={`px-3 py-1 rounded-full text-xs font-mono font-semibold border transition-colors whitespace-nowrap ${
                     isSelected
-                      ? 'bg-blue-800 text-white border-blue-800'
-                      : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                      ? 'bg-[#1E241E] text-[#F5F3EE] border-[#1E241E] dark:bg-[#8D1B22] dark:text-white dark:border-[#8D1B22]'
+                      : 'bg-white text-[#1F241D] border-[#1F241D]/15 hover:border-[#8D1B22] dark:bg-[#1C221B] dark:text-[#F2F0EA] dark:border-white/15 dark:hover:border-[#E5989B]'
                   }`}
                 >
                   {ref}
@@ -144,61 +146,63 @@ export function TrackView({
 
       {/* Result State */}
       {loading ? (
-        <div className="bg-white border border-slate-200 rounded-xl p-10 text-center text-sm text-slate-500">
+        <div className="bg-white dark:bg-[#1C221B] border border-[#1F241D]/10 dark:border-white/12 rounded-3xl p-12 text-center text-sm font-medium text-[#565A51] dark:text-[#B4B9AE]">
           Looking up {searchedRef}...
         </div>
       ) : !searchedRef.trim() ? (
-        <div className="bg-white border border-slate-200 rounded-xl p-10 text-center space-y-2">
-          <p className="text-base font-semibold text-slate-900">
+        <div className="bg-white dark:bg-[#1C221B] border border-[#1F241D]/10 dark:border-white/12 rounded-3xl p-12 text-center space-y-2">
+          <p className="font-display text-xl font-bold text-[#1F241D] dark:text-[#F2F0EA]">
             Enter a reference number above
           </p>
-          <p className="text-sm text-slate-500">
-            Issue reports start with <span className="font-mono">BRG-</span> and
-            service requests start with <span className="font-mono">REQ-</span>.
+          <p className="text-sm text-[#565A51] dark:text-[#B4B9AE]">
+            Issue reports start with <span className="font-mono font-bold">BRG-</span> and
+            service requests start with <span className="font-mono font-bold">REQ-</span>.
           </p>
         </div>
       ) : !match ? (
-        <div className="bg-white border border-slate-200 rounded-xl p-10 text-center space-y-3">
+        <div className="bg-white dark:bg-[#1C221B] border border-[#1F241D]/10 dark:border-white/12 rounded-3xl p-12 text-center space-y-3">
           <SearchX
-            className="w-8 h-8 text-slate-400 mx-auto"
+            className="w-8 h-8 text-[#565A51] dark:text-[#B4B9AE] mx-auto"
             aria-hidden="true"
           />
           <div>
-            <p className="text-base font-semibold text-slate-900">
+            <p className="font-display text-xl font-bold text-[#1F241D] dark:text-[#F2F0EA]">
               {notFoundMsg || `No record found for "${searchedRef.trim()}"`}
             </p>
-            <p className="text-sm text-slate-500 mt-1">
+            <p className="text-sm text-[#565A51] dark:text-[#B4B9AE] mt-1">
               Check the spelling of your reference number or select one of the
               recent submissions above.
             </p>
           </div>
         </div>
       ) : (
-        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
-          <div className="p-5 sm:p-6 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="space-y-1">
-              <div className="flex flex-wrap items-center gap-x-2 text-xs text-slate-500">
-                <span className="font-mono font-bold text-slate-900 tabular-nums">
-                  {match.referenceNumber}
-                </span>
-                <span aria-hidden="true">·</span>
-                <span>
-                  {match.kind === 'issue' ? 'Issue Report' : 'Service Request'}
-                </span>
-                <span aria-hidden="true">·</span>
-                <span>{match.category}</span>
+        <div className="rounded-3xl overflow-hidden border border-[#1F241D]/12 dark:border-white/12 bg-white dark:bg-[#1C221B] shadow-xs view-enter">
+          {/* Dark Forest Charcoal Ticket Header + Progress Rail */}
+          <div className="bg-[#1E241E] text-white p-6 sm:p-8 space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+              <div className="space-y-1.5">
+                <div className="flex flex-wrap items-center gap-x-2.5 text-xs text-white/75">
+                  <span className="font-mono font-bold text-[#F5F3EE] tabular-nums">
+                    {match.referenceNumber}
+                  </span>
+                  <span aria-hidden="true">·</span>
+                  <span>
+                    {match.kind === 'issue' ? 'Issue Report' : 'Service Request'}
+                  </span>
+                  <span aria-hidden="true">·</span>
+                  <span>{match.category}</span>
+                </div>
+                <h2 className="font-display text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
+                  {match.title}
+                </h2>
               </div>
-              <h2 className="text-xl font-bold text-slate-900">{match.title}</h2>
+
+              <div className="shrink-0">
+                <StatusLabel status={match.status} size="md" />
+              </div>
             </div>
 
-            <div className="shrink-0">
-              <StatusLabel status={match.status} size="md" />
-            </div>
-          </div>
-
-          {/* 3-Step Progress Stepper */}
-          <div className="px-5 sm:px-6 py-5 bg-slate-50 border-b border-slate-200">
-            <ol className="grid grid-cols-3 gap-3">
+            <ol className="grid grid-cols-3 gap-3 sm:gap-5 pt-2">
               {SUBMISSION_STATUSES.map((step, index) => {
                 const completed = index <= activeStepIndex;
                 const isCurrent = index === activeStepIndex;
@@ -206,10 +210,10 @@ export function TrackView({
                   <li key={step} className="space-y-2">
                     <div className="flex items-center gap-2">
                       <span
-                        className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
+                        className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-mono font-bold shrink-0 ${
                           completed
-                            ? 'bg-blue-800 text-white'
-                            : 'bg-slate-200 text-slate-500'
+                            ? 'bg-[#8D1B22] text-white'
+                            : 'bg-white/10 text-white/60 border border-white/20'
                         }`}
                       >
                         {completed ? (
@@ -219,76 +223,79 @@ export function TrackView({
                         )}
                       </span>
                       <span
-                        className={`text-xs sm:text-sm font-semibold truncate ${
+                        className={`text-xs sm:text-sm font-bold truncate ${
                           isCurrent
-                            ? 'text-slate-900'
+                            ? 'text-white'
                             : completed
-                              ? 'text-slate-700'
-                              : 'text-slate-400'
+                              ? 'text-white/90'
+                              : 'text-white/50'
                         }`}
                       >
                         {step}
                       </span>
                     </div>
-                    <div
-                      className={`h-1 rounded-full ${
-                        completed ? 'bg-blue-800' : 'bg-slate-200'
-                      }`}
-                    />
+                    <div className="h-1 rounded-full bg-white/15 overflow-hidden">
+                      <div
+                        className={`h-full transition-all ${
+                          completed ? 'bg-[#8D1B22] w-full' : 'w-0'
+                        }`}
+                      />
+                    </div>
                   </li>
                 );
               })}
             </ol>
           </div>
 
-          <div className="p-5 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
-            <div className="lg:col-span-7 space-y-5">
-              <div>
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">
+          {/* Minimal Split Content: Details (Left) & Stone Activity Rail (Right) */}
+          <div className="grid grid-cols-1 lg:grid-cols-12">
+            <div className="lg:col-span-7 p-6 sm:p-8 space-y-6 bg-white dark:bg-[#1C221B]">
+              <div className="space-y-2">
+                <h3 className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#565A51] dark:text-[#B4B9AE]">
                   Submission Details
                 </h3>
-                <p className="text-sm text-slate-800 leading-relaxed">
+                <p className="text-sm sm:text-base text-[#1F241D] dark:text-[#F2F0EA] leading-relaxed">
                   {match.description}
                 </p>
               </div>
 
-              <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3 border-t border-slate-200 text-sm">
+              <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-5 border-t border-[#1F241D]/10 dark:border-white/10 text-sm">
                 <div>
-                  <dt className="text-xs text-slate-500">Purok / Location</dt>
-                  <dd className="font-medium text-slate-900 mt-0.5">
+                  <dt className="text-xs text-[#565A51] dark:text-[#B4B9AE]">Purok / Location</dt>
+                  <dd className="font-semibold text-[#1F241D] dark:text-[#F2F0EA] mt-0.5">
                     {match.purok} — {match.location}
                   </dd>
                 </div>
                 <div>
-                  <dt className="text-xs text-slate-500">Submitted By</dt>
-                  <dd className="font-medium text-slate-900 mt-0.5">
+                  <dt className="text-xs text-[#565A51] dark:text-[#B4B9AE]">Submitted By</dt>
+                  <dd className="font-semibold text-[#1F241D] dark:text-[#F2F0EA] mt-0.5">
                     {match.residentName}
                   </dd>
                 </div>
                 <div>
-                  <dt className="text-xs text-slate-500">Date Filed</dt>
-                  <dd className="font-mono text-xs text-slate-800 mt-0.5 tabular-nums">
+                  <dt className="text-xs text-[#565A51] dark:text-[#B4B9AE]">Date Filed</dt>
+                  <dd className="font-mono text-xs text-[#1F241D] dark:text-[#F2F0EA] mt-0.5 tabular-nums">
                     {formatDisplayDateTime(match.createdAt)}
                   </dd>
                 </div>
                 <div>
-                  <dt className="text-xs text-slate-500">Last Updated</dt>
-                  <dd className="font-mono text-xs text-slate-800 mt-0.5 tabular-nums">
+                  <dt className="text-xs text-[#565A51] dark:text-[#B4B9AE]">Last Updated</dt>
+                  <dd className="font-mono text-xs text-[#1F241D] dark:text-[#F2F0EA] mt-0.5 tabular-nums">
                     {formatDisplayDateTime(match.updatedAt)}
                   </dd>
                 </div>
                 {match.purpose && (
                   <div>
-                    <dt className="text-xs text-slate-500">Document Purpose</dt>
-                    <dd className="font-medium text-slate-900 mt-0.5">
+                    <dt className="text-xs text-[#565A51] dark:text-[#B4B9AE]">Document Purpose</dt>
+                    <dd className="font-semibold text-[#1F241D] dark:text-[#F2F0EA] mt-0.5">
                       {match.purpose}
                     </dd>
                   </div>
                 )}
                 {match.preferredPickupDate && (
                   <div>
-                    <dt className="text-xs text-slate-500">Preferred Pickup</dt>
-                    <dd className="font-mono text-xs text-slate-900 mt-0.5 tabular-nums">
+                    <dt className="text-xs text-[#565A51] dark:text-[#B4B9AE]">Preferred Pickup</dt>
+                    <dd className="font-mono text-xs text-[#1F241D] dark:text-[#F2F0EA] mt-0.5 tabular-nums">
                       {formatDisplayDate(match.preferredPickupDate)}
                     </dd>
                   </div>
@@ -296,12 +303,12 @@ export function TrackView({
               </dl>
 
               {match.photoDataUrl && (
-                <div className="pt-3 border-t border-slate-200 space-y-2">
-                  <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                <div className="pt-5 border-t border-[#1F241D]/10 dark:border-white/10 space-y-2.5">
+                  <h3 className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#565A51] dark:text-[#B4B9AE]">
                     Attached Photo Evidence
                   </h3>
                   {imgError ? (
-                    <div className="p-6 bg-slate-100 rounded-lg text-center text-xs text-slate-500">
+                    <div className="p-6 bg-[#ECE9E2] dark:bg-[#252C24] rounded-2xl text-center text-xs text-[#565A51] dark:text-[#B4B9AE]">
                       Photo preview unavailable ({match.photoName || 'image'})
                     </div>
                   ) : (
@@ -310,35 +317,54 @@ export function TrackView({
                       alt={`Evidence for ${match.referenceNumber}`}
                       referrerPolicy="no-referrer"
                       onError={() => setImgError(true)}
-                      className="w-full max-h-72 object-cover rounded-lg border border-slate-200"
+                      className="w-full max-h-72 object-cover rounded-2xl border border-[#1F241D]/10 dark:border-white/12"
                     />
                   )}
                 </div>
               )}
             </div>
 
-            {/* Official Remarks Timeline */}
-            <div className="lg:col-span-5 border-t lg:border-t-0 lg:border-l border-slate-200 pt-5 lg:pt-0 lg:pl-6 space-y-4">
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                Barangay Remarks &amp; Activity Log
+            {/* Warm Stone Official Activity Log */}
+            <div className="lg:col-span-5 bg-[#ECE9E2]/60 dark:bg-[#181D17] border-t lg:border-t-0 lg:border-l border-[#1F241D]/10 dark:border-white/10 p-6 sm:p-8 space-y-4">
+              <h3 className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#565A51] dark:text-[#B4B9AE]">
+                Official Remarks ({match.remarks.length})
               </h3>
 
-              <ol className="space-y-4">
+              <ol className="space-y-3">
                 {[...match.remarks].reverse().map((remark) => (
                   <li
                     key={remark.id}
-                    className="pb-4 border-b border-slate-100 last:border-b-0 last:pb-0 space-y-1.5"
+                    className="bg-white dark:bg-[#1C221B] border border-[#1F241D]/10 dark:border-white/12 rounded-2xl p-4 space-y-2 hover-lift"
                   >
                     <div className="flex items-center justify-between gap-2">
                       <StatusLabel status={remark.status} />
-                      <span className="text-[11px] font-mono text-slate-500 tabular-nums">
+                      <span className="text-[11px] font-mono text-[#565A51] dark:text-[#B4B9AE] tabular-nums">
                         {formatDisplayDateTime(remark.timestamp)}
                       </span>
                     </div>
-                    <p className="text-sm text-slate-800 leading-relaxed">
+                    <p className="text-sm text-[#1F241D] dark:text-[#F2F0EA] leading-relaxed">
                       {remark.note}
                     </p>
-                    <p className="text-xs text-slate-500">
+                    {remark.photoDataUrl && (
+                      <div className="pt-1 space-y-1.5">
+                        <p className="text-[11px] font-bold uppercase tracking-wider text-[#565A51] dark:text-[#B4B9AE]">
+                          {remark.status === 'Resolved'
+                            ? 'Resolved Proof Photo'
+                            : 'Official Update Photo'}
+                        </p>
+                        <img
+                          src={remark.photoDataUrl}
+                          alt={
+                            remark.photoName
+                              ? `Official proof: ${remark.photoName}`
+                              : `Official update photo for ${match.referenceNumber}`
+                          }
+                          referrerPolicy="no-referrer"
+                          className="w-full max-h-48 object-cover rounded-xl border border-[#1F241D]/10 dark:border-white/12"
+                        />
+                      </div>
+                    )}
+                    <p className="text-xs text-[#565A51] dark:text-[#B4B9AE]">
                       {remark.authorName} · {remark.authorRole}
                     </p>
                   </li>

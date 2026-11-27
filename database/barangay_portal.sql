@@ -52,6 +52,8 @@ CREATE TABLE IF NOT EXISTS `submission_remarks` (
   `author_name` VARCHAR(160) NOT NULL,
   `author_role` VARCHAR(120) NOT NULL,
   `note` TEXT NOT NULL,
+  `photo_data_url` MEDIUMTEXT NULL,
+  `photo_name` VARCHAR(255) NULL,
   INDEX `idx_remarks_submission` (`submission_id`),
   CONSTRAINT `fk_remarks_submission`
     FOREIGN KEY (`submission_id`) REFERENCES `submissions`(`id`)

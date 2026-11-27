@@ -13,7 +13,7 @@ export function StatusLabel({ status, size = 'sm' }: StatusLabelProps) {
   if (status === 'Resolved') {
     return (
       <span
-        className={`inline-flex items-center gap-1.5 font-semibold text-emerald-700 whitespace-nowrap ${textClass}`}
+        className={`inline-flex items-center gap-1.5 font-semibold tracking-tight text-emerald-800 dark:text-emerald-300 whitespace-nowrap ${textClass}`}
       >
         <CheckCircle2 className={iconClass} aria-hidden="true" />
         <span>Resolved</span>
@@ -24,7 +24,7 @@ export function StatusLabel({ status, size = 'sm' }: StatusLabelProps) {
   if (status === 'In Progress') {
     return (
       <span
-        className={`inline-flex items-center gap-1.5 font-semibold text-amber-700 whitespace-nowrap ${textClass}`}
+        className={`inline-flex items-center gap-1.5 font-semibold tracking-tight text-amber-800 dark:text-amber-300 whitespace-nowrap ${textClass}`}
       >
         <Clock className={iconClass} aria-hidden="true" />
         <span>In Progress</span>
@@ -34,7 +34,7 @@ export function StatusLabel({ status, size = 'sm' }: StatusLabelProps) {
 
   return (
     <span
-      className={`inline-flex items-center gap-1.5 font-semibold text-blue-800 whitespace-nowrap ${textClass}`}
+      className={`inline-flex items-center gap-1.5 font-semibold tracking-tight text-[#8D1B22] dark:text-[#E5989B] whitespace-nowrap ${textClass}`}
     >
       <Inbox className={iconClass} aria-hidden="true" />
       <span>Received</span>

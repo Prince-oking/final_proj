@@ -179,6 +179,8 @@ class MySqlXamppRepository implements PortalRepository {
         authorName: String(r.author_name),
         authorRole: String(r.author_role),
         note: String(r.note),
+        photoDataUrl: r.photo_data_url ? String(r.photo_data_url) : undefined,
+        photoName: r.photo_name ? String(r.photo_name) : undefined,
       };
       const existing = remarksBySub.get(sid);
       if (existing) existing.push(entry);
@@ -282,8 +284,8 @@ class MySqlXamppRepository implements PortalRepository {
 
       for (const rem of submission.remarks) {
         await conn.execute(
-          `INSERT INTO submission_remarks (id, submission_id, timestamp, status, author_name, author_role, note)
-           VALUES (?, ?, ?, ?, ?, ?, ?)`,
+          `INSERT INTO submission_remarks (id, submission_id, timestamp, status, author_name, author_role, note, photo_data_url, photo_name)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
             rem.id,
             submission.id,
@@ -292,6 +294,8 @@ class MySqlXamppRepository implements PortalRepository {
             rem.authorName,
             rem.authorRole,
             rem.note,
+            rem.photoDataUrl ?? null,
+            rem.photoName ?? null,
           ],
         );
       }
@@ -325,8 +329,8 @@ class MySqlXamppRepository implements PortalRepository {
       }
 
       await conn.execute(
-        `INSERT INTO submission_remarks (id, submission_id, timestamp, status, author_name, author_role, note)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO submission_remarks (id, submission_id, timestamp, status, author_name, author_role, note, photo_data_url, photo_name)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           remark.id,
           submissionId,
@@ -335,6 +339,8 @@ class MySqlXamppRepository implements PortalRepository {
           remark.authorName,
           remark.authorRole,
           remark.note,
+          remark.photoDataUrl ?? null,
+          remark.photoName ?? null,
         ],
       );
 
@@ -589,11 +595,30 @@ export async function createPortalRepository(): Promise<PortalRepository> {
         author_name VARCHAR(160) NOT NULL,
         author_role VARCHAR(120) NOT NULL,
         note TEXT NOT NULL,
+        photo_data_url MEDIUMTEXT NULL,
+        photo_name VARCHAR(255) NULL,
         CONSTRAINT fk_remarks_submission
           FOREIGN KEY (submission_id) REFERENCES submissions(id)
           ON DELETE CASCADE
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
+
+    const [colRows] = await pool.execute<RowDataPacket[]>(
+      `SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
+       WHERE TABLE_SCHEMA = ? AND TABLE_NAME = 'submission_remarks'`,
+      [database],
+    );
+    const colNames = new Set(colRows.map((c) => String(c.COLUMN_NAME)));
+    if (!colNames.has('photo_data_url')) {
+      await pool.query(
+        'ALTER TABLE submission_remarks ADD COLUMN photo_data_url MEDIUMTEXT NULL',
+      );
+    }
+    if (!colNames.has('photo_name')) {
+      await pool.query(
+        'ALTER TABLE submission_remarks ADD COLUMN photo_name VARCHAR(255) NULL',
+      );
+    }
 
     const repo = new MySqlXamppRepository(pool);
     const existing = await repo.listSubmissions();

@@ -1,15 +1,32 @@
 @import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
   --font-display: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
-  --font-sans: "Public Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+:root {
+  --bg-paper: #f5f3ee;
+  --text-ink: #1f241d;
+  --bg-panel: #ffffff;
+  --border-panel: rgba(31, 36, 29, 0.12);
+}
+
+.dark {
+  --bg-paper: #141814;
+  --text-ink: #f2f0ea;
+  --bg-panel: #1c221b;
+  --border-panel: rgba(242, 240, 234, 0.14);
 }
 
 @layer base {
   html {
     font-family: var(--font-sans);
     scroll-behavior: smooth;
+    color: var(--text-ink);
+    background-color: var(--bg-paper);
   }
 
   h1, h2, h3, h4 {
@@ -19,6 +36,25 @@
 
 .tabular-nums {
   font-variant-numeric: tabular-nums;
+}
+
+.editorial-paper {
+  background-color: var(--bg-paper);
+}
+
+.editorial-panel {
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border-panel);
+  border-radius: 0.75rem;
+}
+
+.editorial-btn {
+  border-radius: 0.5rem;
+  transition: transform 140ms cubic-bezier(0.16, 1, 0.3, 1), background-color 140ms ease, color 140ms ease, border-color 140ms ease;
+}
+
+.editorial-btn:active:not(:disabled) {
+  transform: scale(0.98);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -35,3 +71,214 @@
     display: none !important;
   }
 }
+
+/* ==========================================================================
+   NEW: Editorial Civic Motion System (transform & opacity only, 60fps)
+   Tweak timing, distance, stagger, and easing via the variables below.
+   ========================================================================== */
+:root {
+  --motion-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --motion-duration-fast: 220ms;
+  --motion-duration-base: 560ms;
+  --motion-duration-hero: 760ms;
+  --motion-distance: 16px;
+  --motion-stagger: 80ms;
+}
+
+/* Smooth anchor scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Keyframes (compositor-only) */
+@keyframes motionFadeUp {
+  from {
+    opacity: 0;
+    transform: translate3d(0, var(--motion-distance), 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes motionViewIn {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 10px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes motionHeroMedia {
+  from {
+    opacity: 0.72;
+    transform: scale(1.04);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Page-load hero entrance */
+.hero-enter {
+  animation: motionFadeUp var(--motion-duration-hero) var(--motion-ease) both;
+  will-change: transform, opacity;
+}
+
+.hero-enter-delay-1 {
+  animation-delay: calc(var(--motion-stagger) * 1);
+}
+
+.hero-enter-delay-2 {
+  animation-delay: calc(var(--motion-stagger) * 2);
+}
+
+.hero-enter-delay-3 {
+  animation-delay: calc(var(--motion-stagger) * 3);
+}
+
+.hero-bg-settle {
+  animation: motionHeroMedia 800ms var(--motion-ease) both;
+  will-change: transform, opacity;
+}
+
+@keyframes motionFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.hero-notch-enter {
+  animation: motionFadeIn 520ms var(--motion-ease) both;
+}
+
+/* Inner view & dynamic result transitions */
+.view-enter {
+  animation: motionViewIn 320ms var(--motion-ease) both;
+}
+
+/* Floating island & sticky bar refined easing */
+.motion-island {
+  transition-timing-function: var(--motion-ease);
+  transition-duration: 280ms;
+}
+
+/* Scroll-triggered reveal (only hides when html.motion-ready is active to prevent FOUC) */
+html.motion-ready .reveal {
+  opacity: 0;
+  transform: translate3d(0, var(--motion-distance), 0);
+  transition:
+    opacity var(--motion-duration-base) var(--motion-ease),
+    transform var(--motion-duration-base) var(--motion-ease);
+  will-change: transform, opacity;
+}
+
+html.motion-ready .reveal.is-visible {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+}
+
+html.motion-ready .reveal-delay-1 {
+  transition-delay: calc(var(--motion-stagger) * 1);
+}
+
+html.motion-ready .reveal-delay-2 {
+  transition-delay: calc(var(--motion-stagger) * 2);
+}
+
+html.motion-ready .reveal-delay-3 {
+  transition-delay: calc(var(--motion-stagger) * 3);
+}
+
+html.motion-ready .reveal-delay-4 {
+  transition-delay: calc(var(--motion-stagger) * 4);
+}
+
+/* Subtle hover & focus-visible lift for cards */
+.hover-lift {
+  transition: transform var(--motion-duration-fast) var(--motion-ease);
+}
+
+.hover-lift:hover,
+.hover-lift:focus-within {
+  transform: translate3d(0, -3px, 0);
+}
+
+/* Gentle zoom for framed card imagery inside existing overflow-hidden boxes */
+.hover-img-zoom img {
+  transition: transform 520ms var(--motion-ease);
+  will-change: transform;
+}
+
+.hover-img-zoom:hover img,
+.hover-img-zoom:focus-within img {
+  transform: scale(1.035);
+}
+
+/* Trailing arrow micro-nudge on interactive buttons and ledger rows */
+.arrow-nudge svg:last-child {
+  transition: transform var(--motion-duration-fast) var(--motion-ease);
+}
+
+.arrow-nudge:hover svg:last-child,
+.arrow-nudge:focus-visible svg:last-child {
+  transform: translate3d(3px, 0, 0);
+}
+
+/* Navigation link animated underline (compositor scaleX only, zero layout shift) */
+.nav-link-slide {
+  position: relative;
+}
+
+.nav-link-slide::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1.5px;
+  background-color: currentColor;
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform var(--motion-duration-fast) var(--motion-ease);
+}
+
+.nav-link-slide:hover::after,
+.nav-link-slide:focus-visible::after {
+  transform: scaleX(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-enter,
+  .hero-bg-settle,
+  .hero-notch-enter,
+  .view-enter {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  html.motion-ready .reveal {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+
+  .hover-lift:hover,
+  .hover-lift:focus-within,
+  .hover-img-zoom:hover img,
+  .hover-img-zoom:focus-within img,
+  .arrow-nudge:hover svg:last-child,
+  .arrow-nudge:focus-visible svg:last-child {
+    transform: none !important;
+  }
+}
+

@@ -65,6 +65,8 @@ export interface RemarkEntry {
   authorName: string;
   authorRole: string;
   note: string;
+  photoDataUrl?: string;
+  photoName?: string;
 }
 
 export interface PortalSubmission {

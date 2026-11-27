@@ -5,7 +5,10 @@ import type {
 } from '../types/portal';
 
 export const HERO_BARANGAY_HALL_IMAGE =
-  '/src/assets/images/barangay_hall_hero_1795332792655.jpg';
+  '/src/assets/images/hero_barangay_village_vista_1795758871959.jpg';
+
+export const HERO_BARANGAY_HALL_NIGHT_IMAGE =
+  '/src/assets/images/hero_barangay_night_1795763000796.jpg';
 
 export const SAMPLE_RESIDENTS: ResidentAccount[] = [
   {

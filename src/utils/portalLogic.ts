@@ -192,6 +192,7 @@ export function applyStaffStatusUpdate(
   remarkNote: string,
   official: StaffOfficial,
   timestamp = new Date().toISOString(),
+  photo?: { photoDataUrl?: string; photoName?: string },
 ): PortalSubmission[] {
   const trimmedNote = remarkNote.trim();
   const noteText =
@@ -210,6 +211,8 @@ export function applyStaffStatusUpdate(
       authorName: official.name,
       authorRole: official.role,
       note: noteText,
+      photoDataUrl: photo?.photoDataUrl,
+      photoName: photo?.photoName,
     };
 
     return {

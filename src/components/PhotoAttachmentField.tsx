@@ -7,6 +7,13 @@ interface PhotoAttachmentFieldProps {
   photoDataUrl?: string;
   photoName?: string;
   onChange: (dataUrl?: string, fileName?: string) => void;
+  label?: string;
+  optionalLabel?: string;
+  helperText?: string;
+  promptTitle?: string;
+  promptSubtitle?: string;
+  readySubtitle?: string;
+  compact?: boolean;
 }
 
 async function compressImageFile(file: File): Promise<string> {
@@ -49,6 +56,13 @@ export function PhotoAttachmentField({
   photoDataUrl,
   photoName,
   onChange,
+  label = 'Photo Evidence',
+  optionalLabel = '(Recommended)',
+  helperText = 'Take a live photo or upload from device',
+  promptTitle = 'Add a photo of the problem',
+  promptSubtitle = 'Use your camera directly or drag and drop a JPG/PNG image here.',
+  readySubtitle = 'Ready to attach',
+  compact = false,
 }: PhotoAttachmentFieldProps) {
   const uploadInputRef = useRef<HTMLInputElement | null>(null);
   const mobileCameraInputRef = useRef<HTMLInputElement | null>(null);
@@ -95,12 +109,15 @@ export function PhotoAttachmentField({
   };
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2.5">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <label className="block text-sm font-semibold text-slate-900">
-          Photo Evidence <span className="font-normal text-slate-500">(Recommended)</span>
+        <label className="block text-xs font-bold uppercase tracking-wider text-[#1F241D] dark:text-[#F2F0EA]">
+          {label}{' '}
+          {optionalLabel && (
+            <span className="font-normal text-[#565A51] dark:text-[#B4B9AE]">{optionalLabel}</span>
+          )}
         </label>
-        <span className="text-xs text-slate-500">Take a live photo or upload from device</span>
+        {!compact && <span className="text-xs text-[#565A51] dark:text-[#B4B9AE]">{helperText}</span>}
       </div>
 
       <input
@@ -122,26 +139,30 @@ export function PhotoAttachmentField({
       />
 
       {photoDataUrl ? (
-        <div className="border border-slate-200 rounded-xl bg-white overflow-hidden">
-          <div className="aspect-[16/9] max-h-64 w-full bg-slate-100 overflow-hidden">
+        <div className="border border-[#1F241D]/15 dark:border-white/15 rounded-2xl bg-white dark:bg-[#1C221B] overflow-hidden">
+          <div
+            className={`w-full bg-[#1E241E] overflow-hidden ${
+              compact ? 'max-h-44 aspect-[16/10]' : 'aspect-[16/9] max-h-64'
+            }`}
+          >
             <img
               src={photoDataUrl}
-              alt={photoName ? `Attached evidence: ${photoName}` : 'Attached issue photo'}
+              alt={photoName ? `Attached photo: ${photoName}` : 'Attached photo'}
               className="w-full h-full object-cover"
             />
           </div>
-          <div className="px-4 py-3 flex flex-wrap items-center justify-between gap-3 border-t border-slate-200">
+          <div className="px-4 py-3 flex flex-wrap items-center justify-between gap-3 border-t border-[#1F241D]/10 dark:border-white/10 bg-[#ECE9E2] dark:bg-[#252C24]">
             <div className="min-w-0">
-              <p className="text-xs font-medium text-slate-900 truncate">
-                {photoName || 'Captured photo evidence'}
+              <p className="text-xs font-bold text-[#1F241D] dark:text-[#F2F0EA] truncate">
+                {photoName || 'Captured photo'}
               </p>
-              <p className="text-xs text-slate-500">Ready to attach to report</p>
+              <p className="text-xs text-[#565A51] dark:text-[#B4B9AE]">{readySubtitle}</p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <button
                 type="button"
                 onClick={() => setIsCameraModalOpen(true)}
-                className="min-h-[40px] inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-700 bg-slate-100 rounded-lg hover:bg-slate-200 whitespace-nowrap"
+                className="min-h-[36px] inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider text-[#1F241D] dark:text-[#F2F0EA] border border-[#1F241D]/20 dark:border-white/15 bg-white dark:bg-[#1C221B] hover:bg-[#1E241E] dark:hover:bg-[#8D1B22] hover:text-white transition-colors whitespace-nowrap"
               >
                 <Camera className="w-3.5 h-3.5" aria-hidden="true" />
                 <span>Retake</span>
@@ -149,7 +170,7 @@ export function PhotoAttachmentField({
               <button
                 type="button"
                 onClick={() => uploadInputRef.current?.click()}
-                className="min-h-[40px] inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-700 bg-slate-100 rounded-lg hover:bg-slate-200 whitespace-nowrap"
+                className="min-h-[36px] inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider text-[#1F241D] dark:text-[#F2F0EA] border border-[#1F241D]/20 dark:border-white/15 bg-white dark:bg-[#1C221B] hover:bg-[#1E241E] dark:hover:bg-[#8D1B22] hover:text-white transition-colors whitespace-nowrap"
               >
                 <Upload className="w-3.5 h-3.5" aria-hidden="true" />
                 <span>Replace</span>
@@ -158,7 +179,7 @@ export function PhotoAttachmentField({
                 type="button"
                 onClick={() => onChange(undefined, undefined)}
                 aria-label="Remove attached photo"
-                className="min-h-[40px] inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-700 bg-red-50 rounded-lg hover:bg-red-100 whitespace-nowrap"
+                className="min-h-[36px] inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider text-[#8D1B22] dark:text-[#FAD2D4] border border-[#8D1B22]/40 dark:border-[#E5989B]/40 bg-red-50 dark:bg-[#3A1719] hover:bg-[#8D1B22] hover:text-white transition-colors whitespace-nowrap"
               >
                 <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
                 <span>Remove</span>
@@ -174,23 +195,35 @@ export function PhotoAttachmentField({
           }}
           onDragLeave={() => setIsDragging(false)}
           onDrop={handleDrop}
-          className={`border border-dashed rounded-xl p-5 transition-colors ${
+          className={`border border-dashed rounded-2xl transition-colors ${
+            compact ? 'p-3.5' : 'p-5'
+          } ${
             isDragging
-              ? 'border-blue-700 bg-blue-50/50'
-              : 'border-slate-300 bg-slate-50/70'
+              ? 'border-[#8D1B22] dark:border-[#E5989B] bg-red-50/40 dark:bg-[#3A1719]/50'
+              : 'border-[#1F241D]/20 dark:border-white/20 bg-[#F5F3EE]/50 dark:bg-[#141814]'
           }`}
         >
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div
+            className={`flex gap-3 ${
+              compact
+                ? 'flex-col'
+                : 'flex-col sm:flex-row sm:items-center sm:justify-between'
+            }`}
+          >
             <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-slate-600 shrink-0">
-                <ImagePlus className="w-5 h-5" aria-hidden="true" />
+              <div
+                className={`${
+                  compact ? 'w-9 h-9' : 'w-10 h-10'
+                } rounded-xl bg-[#ECE9E2] dark:bg-[#252C24] border border-[#1F241D]/12 dark:border-white/12 flex items-center justify-center text-[#1F241D] dark:text-[#F2F0EA] shrink-0`}
+              >
+                <ImagePlus className="w-4 h-4" aria-hidden="true" />
               </div>
               <div>
-                <p className="text-sm font-medium text-slate-900">
-                  Add a photo of the problem
+                <p className="text-xs sm:text-sm font-bold text-[#1F241D] dark:text-[#F2F0EA]">
+                  {promptTitle}
                 </p>
-                <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
-                  Use your camera directly or drag and drop a JPG/PNG image here.
+                <p className="text-xs text-[#565A51] dark:text-[#B4B9AE] mt-0.5 leading-relaxed">
+                  {promptSubtitle}
                 </p>
               </div>
             </div>
@@ -199,28 +232,32 @@ export function PhotoAttachmentField({
               <button
                 type="button"
                 onClick={() => setIsCameraModalOpen(true)}
-                className="min-h-[44px] inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold text-white bg-blue-800 rounded-lg hover:bg-blue-900 whitespace-nowrap"
+                className={`${
+                  compact ? 'min-h-[38px] px-3.5 py-1.5' : 'min-h-[42px] px-4 py-2'
+                } rounded-full inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-white bg-[#1E241E] dark:bg-[#8D1B22] hover:bg-[#2B332B] dark:hover:bg-[#701319] transition-colors whitespace-nowrap`}
               >
-                <Camera className="w-4 h-4" aria-hidden="true" />
+                <Camera className="w-3.5 h-3.5" aria-hidden="true" />
                 <span>Take Photo</span>
               </button>
               <button
                 type="button"
                 onClick={() => uploadInputRef.current?.click()}
-                className="min-h-[44px] inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold text-slate-800 bg-white border border-slate-300 rounded-lg hover:bg-slate-100 whitespace-nowrap"
+                className={`${
+                  compact ? 'min-h-[38px] px-3.5 py-1.5' : 'min-h-[42px] px-4 py-2'
+                } rounded-full inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#1F241D] dark:text-[#F2F0EA] border border-[#1F241D]/20 dark:border-white/15 bg-white dark:bg-[#1C221B] hover:bg-[#1E241E] dark:hover:bg-[#252C24] hover:text-white transition-colors whitespace-nowrap`}
               >
-                <Upload className="w-4 h-4" aria-hidden="true" />
+                <Upload className="w-3.5 h-3.5" aria-hidden="true" />
                 <span>Upload Photo</span>
               </button>
             </div>
           </div>
 
-          <div className="mt-3 pt-3 border-t border-slate-200/80 flex items-center justify-between gap-2 sm:hidden">
-            <span className="text-[11px] text-slate-500">Using a phone?</span>
+          <div className="mt-3 pt-3 border-t border-[#1F241D]/10 dark:border-white/10 flex items-center justify-between gap-2 sm:hidden">
+            <span className="text-[11px] text-[#565A51] dark:text-[#B4B9AE]">Using a phone?</span>
             <button
               type="button"
               onClick={() => mobileCameraInputRef.current?.click()}
-              className="text-xs font-semibold text-blue-800 underline underline-offset-2"
+              className="text-xs font-bold text-[#8D1B22] dark:text-[#E5989B] underline underline-offset-2"
             >
               Open Native Phone Camera
             </button>
@@ -229,7 +266,7 @@ export function PhotoAttachmentField({
       )}
 
       {uploadError && (
-        <p role="alert" className="text-xs font-medium text-red-700">
+        <p role="alert" className="text-xs font-bold text-[#8D1B22] dark:text-[#E5989B]">
           {uploadError}
         </p>
       )}

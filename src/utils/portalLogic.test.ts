@@ -181,6 +181,24 @@ test('applyStaffStatusUpdate appends remark and updates status immutably', () =>
   assert.equal(updated[0].remarks.length, 2);
   assert.equal(updated[0].remarks[1].authorName, 'Sec. Elena Villanueva');
   assert.equal(updated[0].remarks[1].note, 'Assigned electrician for pole inspection.');
+  assert.equal(updated[0].remarks[1].photoDataUrl, undefined);
+
+  const resolvedWithPhoto = applyStaffStatusUpdate(
+    updated,
+    'sub-1',
+    'Resolved',
+    'Drainage and pole cleared and verified.',
+    sampleOfficial,
+    '2026-11-21T09:00:00.000Z',
+    {
+      photoDataUrl: 'data:image/png;base64,iVBORw0KGgo=',
+      photoName: 'resolved-proof.png',
+    },
+  );
+  assert.equal(resolvedWithPhoto[0].status, 'Resolved');
+  assert.equal(resolvedWithPhoto[0].remarks.length, 3);
+  assert.equal(resolvedWithPhoto[0].remarks[2].photoDataUrl, 'data:image/png;base64,iVBORw0KGgo=');
+  assert.equal(resolvedWithPhoto[0].remarks[2].photoName, 'resolved-proof.png');
 });
 
 test('computeSummaryStats and generateSummaryCsv aggregate counts accurately', () => {

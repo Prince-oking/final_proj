@@ -138,18 +138,18 @@ export function CameraCaptureModal({
       role="dialog"
       aria-modal="true"
       aria-labelledby="camera-modal-title"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-[#1E241E]/75 dark:bg-black/75 backdrop-blur-sm p-4"
     >
-      <div className="w-full max-w-xl bg-white rounded-xl border border-slate-200 overflow-hidden shadow-xl">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200">
+      <div className="w-full max-w-xl bg-[#F5F3EE] dark:bg-[#1C221B] border border-[#1F241D]/20 dark:border-white/15 rounded-2xl shadow-2xl overflow-hidden">
+        <div className="flex items-center justify-between px-5 py-4 bg-[#1E241E] dark:bg-[#141814] text-[#F5F3EE] dark:border-b dark:border-white/10">
           <div>
             <h2
               id="camera-modal-title"
-              className="text-base font-bold text-slate-900"
+              className="font-display text-lg font-bold tracking-tight"
             >
               Take Issue Photo
             </h2>
-            <p className="text-xs text-slate-500 mt-0.5">
+            <p className="text-xs text-[#A9ADA3] mt-0.5">
               Capture a clear photo of the street, streetlight, drainage, or waste concern.
             </p>
           </div>
@@ -157,14 +157,14 @@ export function CameraCaptureModal({
             type="button"
             onClick={onClose}
             aria-label="Close camera modal"
-            className="min-h-[40px] min-w-[40px] inline-flex items-center justify-center rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100"
+            className="min-h-[40px] min-w-[40px] inline-flex items-center justify-center text-[#F5F3EE] hover:text-[#E5989B] transition-colors"
           >
             <X className="w-5 h-5" aria-hidden="true" />
           </button>
         </div>
 
         <div className="p-5 space-y-4">
-          <div className="relative aspect-[4/3] w-full bg-slate-900 rounded-lg overflow-hidden flex items-center justify-center">
+          <div className="relative aspect-[4/3] w-full bg-[#1E241E] border border-[#1F241D]/20 dark:border-white/15 rounded-xl overflow-hidden flex items-center justify-center">
             {cameraState === 'captured' && capturedUrl ? (
               <img
                 src={capturedUrl}
@@ -191,10 +191,12 @@ export function CameraCaptureModal({
             )}
 
             {cameraState === 'error' && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-900 text-white px-6 text-center">
-                <Camera className="w-9 h-9 mb-3 text-slate-300" aria-hidden="true" />
-                <p className="text-sm font-semibold">Camera Unavailable</p>
-                <p className="text-xs text-slate-300 mt-1.5 max-w-sm leading-relaxed">
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#1E241E] text-white px-6 text-center">
+                <Camera className="w-9 h-9 mb-3 text-[#A9ADA3]" aria-hidden="true" />
+                <p className="font-display text-xl font-bold">
+                  Camera Unavailable
+                </p>
+                <p className="text-xs text-[#D2D4CC] mt-1.5 max-w-sm leading-relaxed">
                   {errorMessage}
                 </p>
                 <button
@@ -203,7 +205,7 @@ export function CameraCaptureModal({
                     onClose();
                     onFallbackUpload();
                   }}
-                  className="mt-4 inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold bg-white text-slate-900 rounded-lg hover:bg-slate-100"
+                  className="editorial-btn mt-4 inline-flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-wider bg-[#8D1B22] text-white hover:bg-[#701319]"
                 >
                   <Upload className="w-4 h-4" aria-hidden="true" />
                   <span>Upload Photo File Instead</span>
@@ -220,7 +222,7 @@ export function CameraCaptureModal({
                   onClick={() =>
                     setFacingMode((m) => (m === 'environment' ? 'user' : 'environment'))
                   }
-                  className="min-h-[44px] inline-flex items-center gap-2 px-3.5 py-2 text-xs font-medium text-slate-700 bg-slate-100 rounded-lg hover:bg-slate-200 whitespace-nowrap"
+                  className="editorial-btn min-h-[44px] inline-flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-wider text-[#1F241D] dark:text-[#F2F0EA] border border-[#1F241D]/20 dark:border-white/15 bg-white dark:bg-[#252C24] hover:bg-[#1E241E] dark:hover:bg-[#2F372E] hover:text-white whitespace-nowrap"
                 >
                   <RefreshCw className="w-4 h-4" aria-hidden="true" />
                   <span>Switch Camera</span>
@@ -228,7 +230,7 @@ export function CameraCaptureModal({
                 <button
                   type="button"
                   onClick={handleTakeSnapshot}
-                  className="min-h-[44px] inline-flex items-center gap-2 px-5 py-2 text-sm font-semibold text-white bg-blue-800 rounded-lg hover:bg-blue-900 whitespace-nowrap"
+                  className="editorial-btn min-h-[44px] inline-flex items-center gap-2 px-5 py-2 text-xs font-bold uppercase tracking-wider text-white bg-[#8D1B22] hover:bg-[#701319] whitespace-nowrap"
                 >
                   <Camera className="w-4 h-4" aria-hidden="true" />
                   <span>Capture Photo</span>
@@ -241,7 +243,7 @@ export function CameraCaptureModal({
                 <button
                   type="button"
                   onClick={handleRetake}
-                  className="min-h-[44px] inline-flex items-center gap-2 px-4 py-2 text-xs font-medium text-slate-700 bg-slate-100 rounded-lg hover:bg-slate-200 whitespace-nowrap"
+                  className="editorial-btn min-h-[44px] inline-flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-wider text-[#1F241D] dark:text-[#F2F0EA] border border-[#1F241D]/20 dark:border-white/15 bg-white dark:bg-[#252C24] hover:bg-[#1E241E] dark:hover:bg-[#2F372E] hover:text-white whitespace-nowrap"
                 >
                   <RotateCcw className="w-4 h-4" aria-hidden="true" />
                   <span>Retake</span>
@@ -249,7 +251,7 @@ export function CameraCaptureModal({
                 <button
                   type="button"
                   onClick={handleUsePhoto}
-                  className="min-h-[44px] inline-flex items-center gap-2 px-5 py-2 text-sm font-semibold text-white bg-blue-800 rounded-lg hover:bg-blue-900 whitespace-nowrap"
+                  className="editorial-btn min-h-[44px] inline-flex items-center gap-2 px-5 py-2 text-xs font-bold uppercase tracking-wider text-white bg-[#8D1B22] hover:bg-[#701319] whitespace-nowrap"
                 >
                   <span>Use This Photo</span>
                 </button>
@@ -261,7 +263,7 @@ export function CameraCaptureModal({
                 <button
                   type="button"
                   onClick={onClose}
-                  className="min-h-[44px] px-4 py-2 text-xs font-medium text-slate-700 border border-slate-200 rounded-lg hover:bg-slate-50"
+                  className="editorial-btn min-h-[44px] px-4 py-2 text-xs font-bold uppercase tracking-wider text-[#1F241D] dark:text-[#F2F0EA] border border-[#1F241D]/20 dark:border-white/15 bg-white dark:bg-[#252C24] hover:bg-[#1E241E] dark:hover:bg-[#2F372E] hover:text-white"
                 >
                   Cancel
                 </button>

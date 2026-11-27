@@ -28,6 +28,9 @@ interface ResidentAuthViewProps {
   noticeText?: string;
 }
 
+const inputClass =
+  'w-full min-h-[44px] px-3.5 py-2 text-sm bg-[#F5F3EE]/50 dark:bg-[#141814] text-[#1F241D] dark:text-[#F2F0EA] border border-[#1F241D]/15 dark:border-white/15 rounded-xl focus:bg-white dark:focus:bg-[#181D17] focus:border-[#8D1B22] focus:outline-none focus:ring-1 focus:ring-[#8D1B22] placeholder:text-[#565A51] dark:placeholder:text-[#989E91]';
+
 export function ResidentAuthView({
   authUser,
   token,
@@ -55,6 +58,7 @@ export function ResidentAuthView({
 
   const [mySubmissions, setMySubmissions] = useState<PortalSubmission[]>([]);
   const [loadingMine, setLoadingMine] = useState(false);
+  const [panelImgError, setPanelImgError] = useState(false);
 
   useEffect(() => {
     if (!token || authUser?.role !== 'resident') {
@@ -118,15 +122,16 @@ export function ResidentAuthView({
   if (authUser && authUser.role === 'resident') {
     return (
       <div className="max-w-5xl mx-auto space-y-6">
-        <div className="bg-white border border-slate-200 rounded-xl p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        {/* Warm Stone Resident Profile Banner */}
+        <div className="bg-[#ECE9E2] dark:bg-[#1C221B] border border-[#1F241D]/10 dark:border-white/12 rounded-3xl p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-5">
           <div className="space-y-1">
-            <p className="text-xs font-semibold uppercase tracking-wider text-blue-800">
+            <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#8D1B22] dark:text-[#E5989B]">
               Resident Account
             </p>
-            <h1 className="text-2xl font-bold text-slate-900">
+            <h1 className="font-display text-3xl font-extrabold text-[#1F241D] dark:text-[#F2F0EA] tracking-tight">
               {authUser.fullName}
             </h1>
-            <p className="text-sm text-slate-600">
+            <p className="text-sm text-[#565A51] dark:text-[#B4B9AE]">
               {authUser.purok} · {authUser.address} · {authUser.phone}
             </p>
           </div>
@@ -135,7 +140,7 @@ export function ResidentAuthView({
             <button
               type="button"
               onClick={() => onStartSubmission('issue')}
-              className="min-h-[42px] inline-flex items-center gap-2 px-4 py-2 text-xs sm:text-sm font-semibold text-white bg-blue-800 rounded-lg hover:bg-blue-900 whitespace-nowrap"
+              className="min-h-[42px] inline-flex items-center gap-2 px-5 py-2 rounded-full text-xs font-bold uppercase tracking-wider text-white bg-[#8D1B22] hover:bg-[#701319] transition-colors whitespace-nowrap"
             >
               <PlusCircle className="w-4 h-4" aria-hidden="true" />
               <span>File New Report</span>
@@ -143,14 +148,14 @@ export function ResidentAuthView({
             <button
               type="button"
               onClick={() => onStartSubmission('service')}
-              className="min-h-[42px] px-4 py-2 text-xs sm:text-sm font-semibold text-slate-800 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 whitespace-nowrap"
+              className="min-h-[42px] px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider text-[#1F241D] dark:text-[#F2F0EA] bg-white dark:bg-[#252C24] border border-[#1F241D]/15 dark:border-white/15 hover:bg-[#1E241E] hover:text-white dark:hover:bg-[#F2F0EA] dark:hover:text-[#141814] transition-colors whitespace-nowrap"
             >
               Request Document
             </button>
             <button
               type="button"
               onClick={onSignOut}
-              className="min-h-[42px] inline-flex items-center gap-1.5 px-3.5 py-2 text-xs sm:text-sm font-semibold text-slate-700 bg-slate-100 rounded-lg hover:bg-slate-200 whitespace-nowrap"
+              className="min-h-[42px] inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider text-[#1F241D] dark:text-[#F2F0EA] hover:bg-white/70 dark:hover:bg-white/10 transition-colors whitespace-nowrap"
             >
               <LogOut className="w-4 h-4" aria-hidden="true" />
               <span>Sign Out</span>
@@ -158,54 +163,54 @@ export function ResidentAuthView({
           </div>
         </div>
 
-        <section className="bg-white border border-slate-200 rounded-xl overflow-hidden">
-          <div className="px-5 py-4 border-b border-slate-200 flex items-center justify-between">
+        <section className="bg-white dark:bg-[#1C221B] border border-[#1F241D]/10 dark:border-white/12 rounded-3xl overflow-hidden">
+          <div className="px-6 py-5 border-b border-[#1F241D]/10 dark:border-white/10 flex items-center justify-between">
             <div>
-              <h2 className="text-lg font-bold text-slate-900">
+              <h2 className="font-display text-2xl font-extrabold text-[#1F241D] dark:text-[#F2F0EA]">
                 My Submitted Reports &amp; Service Requests
               </h2>
-              <p className="text-xs text-slate-500 mt-0.5">
+              <p className="text-xs text-[#565A51] dark:text-[#B4B9AE] mt-0.5">
                 Records filed under {authUser.email}
               </p>
             </div>
-            <span className="text-xs font-mono font-semibold text-slate-700 tabular-nums">
+            <span className="text-xs font-mono font-bold text-[#1F241D] dark:text-[#F2F0EA] tabular-nums">
               {mySubmissions.length} total
             </span>
           </div>
 
           {loadingMine ? (
-            <div className="p-8 text-center text-sm text-slate-500">
+            <div className="p-8 text-center text-sm text-[#565A51] dark:text-[#B4B9AE]">
               Loading your submissions...
             </div>
           ) : mySubmissions.length === 0 ? (
-            <div className="p-10 text-center space-y-3">
-              <p className="text-base font-semibold text-slate-900">
+            <div className="p-12 text-center space-y-3">
+              <p className="font-display text-xl font-bold text-[#1F241D] dark:text-[#F2F0EA]">
                 You have not filed any reports or requests yet
               </p>
-              <p className="text-sm text-slate-500 max-w-md mx-auto">
+              <p className="text-sm text-[#565A51] dark:text-[#B4B9AE] max-w-md mx-auto">
                 File a community issue report with photo evidence or request a
                 barangay clearance for pickup.
               </p>
               <button
                 type="button"
                 onClick={() => onStartSubmission('issue')}
-                className="min-h-[42px] px-5 py-2 text-sm font-semibold text-white bg-blue-800 rounded-lg hover:bg-blue-900"
+                className="min-h-[42px] px-5 py-2 rounded-full text-xs font-bold uppercase tracking-wider text-white bg-[#8D1B22] hover:bg-[#701319]"
               >
                 File Your First Report
               </button>
             </div>
           ) : (
-            <div className="divide-y divide-slate-200">
+            <div className="divide-y divide-[#1F241D]/10 dark:divide-white/10">
               {mySubmissions.map((item) => (
                 <button
                   key={item.id}
                   type="button"
                   onClick={() => onTrackReference(item.referenceNumber)}
-                  className="w-full text-left px-5 py-4 hover:bg-slate-50 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                  className="w-full text-left px-6 py-4 hover:bg-[#F5F3EE]/70 dark:hover:bg-[#252C24]/70 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-3"
                 >
                   <div className="min-w-0 space-y-1">
-                    <div className="flex flex-wrap items-center gap-x-2 text-xs text-slate-500">
-                      <span className="font-mono font-semibold text-slate-900 tabular-nums">
+                    <div className="flex flex-wrap items-center gap-x-2 text-xs text-[#565A51] dark:text-[#B4B9AE]">
+                      <span className="font-mono font-bold text-[#1F241D] dark:text-[#F2F0EA] tabular-nums">
                         {item.referenceNumber}
                       </span>
                       <span aria-hidden="true">·</span>
@@ -213,14 +218,14 @@ export function ResidentAuthView({
                       <span aria-hidden="true">·</span>
                       <span>Filed {formatDisplayDate(item.createdAt)}</span>
                     </div>
-                    <p className="text-sm font-semibold text-slate-900 truncate">
+                    <p className="text-sm font-bold text-[#1F241D] dark:text-[#F2F0EA] truncate">
                       {item.title}
                     </p>
-                    <p className="text-xs text-slate-500 truncate">{item.location}</p>
+                    <p className="text-xs text-[#565A51] dark:text-[#B4B9AE] truncate">{item.location}</p>
                   </div>
                   <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0">
                     <StatusLabel status={item.status} />
-                    <ArrowRight className="w-4 h-4 text-slate-400" aria-hidden="true" />
+                    <ArrowRight className="w-4 h-4 text-[#1F241D] dark:text-[#F2F0EA]" aria-hidden="true" />
                   </div>
                 </button>
               ))}
@@ -233,12 +238,12 @@ export function ResidentAuthView({
 
   if (authUser && authUser.role === 'staff') {
     return (
-      <div className="max-w-lg mx-auto bg-white border border-slate-200 rounded-xl p-6 sm:p-8 space-y-4">
-        <h1 className="text-xl font-bold text-slate-900">
+      <div className="max-w-lg mx-auto bg-white dark:bg-[#1C221B] border border-[#1F241D]/12 dark:border-white/12 rounded-3xl p-6 sm:p-8 space-y-4">
+        <h1 className="font-display text-2xl font-extrabold text-[#1F241D] dark:text-[#F2F0EA]">
           Currently Signed In as Barangay Staff
         </h1>
-        <p className="text-sm text-slate-600 leading-relaxed">
-          You are signed in as <strong>{authUser.fullName}</strong> (
+        <p className="text-sm text-[#565A51] dark:text-[#B4B9AE] leading-relaxed">
+          You are signed in as <strong className="text-[#1F241D] dark:text-[#F2F0EA]">{authUser.fullName}</strong> (
           {authUser.officialTitle}). Sign out first if you want to sign into a
           resident account.
         </p>
@@ -246,7 +251,7 @@ export function ResidentAuthView({
           <button
             type="button"
             onClick={onSignOut}
-            className="min-h-[42px] px-4 py-2 text-sm font-semibold text-white bg-blue-800 rounded-lg hover:bg-blue-900"
+            className="min-h-[42px] px-5 py-2 rounded-full text-xs font-bold uppercase tracking-wider text-white bg-[#1E241E] hover:bg-[#2B332B] dark:bg-[#8D1B22] dark:hover:bg-[#701319]"
           >
             Sign Out to Switch to Resident
           </button>
@@ -256,61 +261,87 @@ export function ResidentAuthView({
   }
 
   return (
-    <div className="max-w-lg mx-auto space-y-5">
-      <div className="space-y-1">
-        <p className="text-xs font-semibold uppercase tracking-wider text-blue-800">
-          Resident Portal Access
-        </p>
-        <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
-          Resident Sign In &amp; Registration
-        </h1>
-        <p className="text-sm text-slate-600">
-          {noticeText ||
-            'Sign in or create a resident account to file community issue reports, request barangay documents, and view your submission history.'}
-        </p>
-      </div>
+    <div className="max-w-4xl mx-auto space-y-5">
+      <div className="rounded-3xl overflow-hidden border border-[#1F241D]/12 dark:border-white/12 bg-white dark:bg-[#1C221B] grid grid-cols-1 lg:grid-cols-12 shadow-xs">
+        {/* Left Atmospheric Editorial Photo Panel */}
+        <div className="lg:col-span-5 relative min-h-[240px] lg:min-h-[520px] bg-[#1E241E] flex flex-col justify-between p-6 sm:p-8 text-white overflow-hidden">
+          {!panelImgError && (
+            <img
+              src="/src/assets/images/bento_community_lane_1795758872975.jpg"
+              alt="Sunlit Barangay San Miguel neighborhood lane"
+              referrerPolicy="no-referrer"
+              onError={() => setPanelImgError(true)}
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+          )}
+          <div
+            aria-hidden="true"
+            className="absolute inset-0 bg-gradient-to-t from-[#121611]/90 via-[#121611]/55 to-[#121611]/45"
+          />
 
-      <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
-        <div className="p-2 bg-slate-100 border-b border-slate-200 grid grid-cols-2 gap-1">
-          <button
-            type="button"
-            onClick={() => {
-              setMode('login');
-              setErrorMsg('');
-              setFieldErrors({});
-            }}
-            className={`min-h-[42px] inline-flex items-center justify-center gap-2 text-xs sm:text-sm font-semibold rounded-lg transition-colors whitespace-nowrap ${
-              mode === 'login'
-                ? 'bg-white text-slate-900 shadow-sm'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            <LogIn className="w-4 h-4" aria-hidden="true" />
-            <span>Resident Sign In</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setMode('register');
-              setErrorMsg('');
-              setFieldErrors({});
-            }}
-            className={`min-h-[42px] inline-flex items-center justify-center gap-2 text-xs sm:text-sm font-semibold rounded-lg transition-colors whitespace-nowrap ${
-              mode === 'register'
-                ? 'bg-white text-slate-900 shadow-sm'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            <UserPlus className="w-4 h-4" aria-hidden="true" />
-            <span>Create Account</span>
-          </button>
+          <div className="relative z-10 space-y-2">
+            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#F5F3EE]/80">
+              Resident Portal
+            </p>
+            <h1 className="font-display text-2xl sm:text-3xl font-extrabold tracking-tight leading-tight [text-wrap:balance]">
+              Direct neighborhood service access.
+            </h1>
+          </div>
+
+          <div className="relative z-10 space-y-3 text-xs text-white/90 pt-6">
+            <p className="leading-relaxed">
+              {noticeText ||
+                'Sign in or register once to submit reports with photo evidence, request barangay clearances, and follow official updates.'}
+            </p>
+            <div className="pt-2 border-t border-white/20 space-y-1 text-[11px] text-white/80">
+              <p>01 · File community issues with live photos</p>
+              <p>02 · Reserve clearances for Window 1 pickup</p>
+              <p>03 · Track every barangay status remark</p>
+            </div>
+          </div>
         </div>
 
-        <div className="p-5 sm:p-6">
+        {/* Right Minimal Form Surface */}
+        <div className="lg:col-span-7 p-6 sm:p-8 space-y-6">
+          <div className="flex items-center p-1 bg-[#ECE9E2] dark:bg-[#141814] rounded-full">
+            <button
+              type="button"
+              onClick={() => {
+                setMode('login');
+                setErrorMsg('');
+                setFieldErrors({});
+              }}
+              className={`flex-1 min-h-[40px] inline-flex items-center justify-center gap-2 rounded-full text-xs font-bold uppercase tracking-wider transition-colors whitespace-nowrap ${
+                mode === 'login'
+                  ? 'bg-[#1E241E] text-[#F5F3EE] dark:bg-[#8D1B22] dark:text-white'
+                  : 'text-[#565A51] hover:text-[#1F241D] dark:text-[#B4B9AE] dark:hover:text-[#F2F0EA]'
+              }`}
+            >
+              <LogIn className="w-3.5 h-3.5" aria-hidden="true" />
+              <span>Resident Sign In</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setMode('register');
+                setErrorMsg('');
+                setFieldErrors({});
+              }}
+              className={`flex-1 min-h-[40px] inline-flex items-center justify-center gap-2 rounded-full text-xs font-bold uppercase tracking-wider transition-colors whitespace-nowrap ${
+                mode === 'register'
+                  ? 'bg-[#1E241E] text-[#F5F3EE] dark:bg-[#8D1B22] dark:text-white'
+                  : 'text-[#565A51] hover:text-[#1F241D] dark:text-[#B4B9AE] dark:hover:text-[#F2F0EA]'
+              }`}
+            >
+              <UserPlus className="w-3.5 h-3.5" aria-hidden="true" />
+              <span>Create Account</span>
+            </button>
+          </div>
+
           {errorMsg && (
             <div
               role="alert"
-              className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-xs font-medium text-red-800 flex items-start gap-2"
+              className="p-3 rounded-xl bg-red-50 dark:bg-[#3A1719] border border-[#8D1B22] dark:border-[#E5989B]/60 text-xs font-semibold text-[#701319] dark:text-[#FAD2D4] flex items-start gap-2"
             >
               <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" aria-hidden="true" />
               <span>{errorMsg}</span>
@@ -322,7 +353,7 @@ export function ResidentAuthView({
               <div>
                 <label
                   htmlFor="res-login-email"
-                  className="block text-sm font-semibold text-slate-900 mb-1.5"
+                  className="block text-xs font-bold uppercase tracking-wider text-[#1F241D] dark:text-[#F2F0EA] mb-1.5"
                 >
                   Email Address
                 </label>
@@ -333,14 +364,14 @@ export function ResidentAuthView({
                   value={loginEmail}
                   onChange={(e) => setLoginEmail(e.target.value)}
                   placeholder="resident@example.ph"
-                  className="w-full min-h-[44px] px-3.5 py-2 text-sm bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700"
+                  className={inputClass}
                 />
               </div>
 
               <div>
                 <label
                   htmlFor="res-login-password"
-                  className="block text-sm font-semibold text-slate-900 mb-1.5"
+                  className="block text-xs font-bold uppercase tracking-wider text-[#1F241D] dark:text-[#F2F0EA] mb-1.5"
                 >
                   Password
                 </label>
@@ -351,24 +382,24 @@ export function ResidentAuthView({
                   value={loginPassword}
                   onChange={(e) => setLoginPassword(e.target.value)}
                   placeholder="Enter your password"
-                  className="w-full min-h-[44px] px-3.5 py-2 text-sm bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700"
+                  className={inputClass}
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={submitting}
-                className="w-full min-h-[44px] px-5 py-2.5 text-sm font-semibold text-white bg-blue-800 rounded-lg hover:bg-blue-900 disabled:opacity-60 transition-colors"
+                className="w-full min-h-[44px] px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider text-white bg-[#1E241E] hover:bg-[#2B332B] dark:bg-[#8D1B22] dark:hover:bg-[#701319] transition-colors disabled:opacity-60"
               >
                 {submitting ? 'Signing In...' : 'Sign In as Resident'}
               </button>
             </form>
           ) : (
-            <form onSubmit={handleRegister} noValidate className="space-y-4">
+            <form onSubmit={handleRegister} noValidate className="space-y-3.5">
               <div>
                 <label
                   htmlFor="res-reg-name"
-                  className="block text-sm font-semibold text-slate-900 mb-1"
+                  className="block text-xs font-bold uppercase tracking-wider text-[#1F241D] dark:text-[#F2F0EA] mb-1"
                 >
                   Full Name
                 </label>
@@ -378,10 +409,12 @@ export function ResidentAuthView({
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   placeholder="e.g., Maria Clara Santos"
-                  className="w-full min-h-[44px] px-3.5 py-2 text-sm bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700"
+                  className={inputClass}
                 />
                 {fieldErrors.fullName && (
-                  <p className="text-xs text-red-700 mt-1">{fieldErrors.fullName}</p>
+                  <p className="text-xs font-semibold text-[#8D1B22] dark:text-[#E5989B] mt-1">
+                    {fieldErrors.fullName}
+                  </p>
                 )}
               </div>
 
@@ -389,7 +422,7 @@ export function ResidentAuthView({
                 <div>
                   <label
                     htmlFor="res-reg-purok"
-                    className="block text-sm font-semibold text-slate-900 mb-1"
+                    className="block text-xs font-bold uppercase tracking-wider text-[#1F241D] dark:text-[#F2F0EA] mb-1"
                   >
                     Purok / Zone
                   </label>
@@ -397,7 +430,7 @@ export function ResidentAuthView({
                     id="res-reg-purok"
                     value={purok}
                     onChange={(e) => setPurok(e.target.value)}
-                    className="w-full min-h-[44px] px-3 py-2 text-sm bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700"
+                    className={inputClass}
                   >
                     {PUROK_LIST.map((p) => (
                       <option key={p} value={p}>
@@ -410,7 +443,7 @@ export function ResidentAuthView({
                 <div>
                   <label
                     htmlFor="res-reg-phone"
-                    className="block text-sm font-semibold text-slate-900 mb-1"
+                    className="block text-xs font-bold uppercase tracking-wider text-[#1F241D] dark:text-[#F2F0EA] mb-1"
                   >
                     Mobile / Contact No.
                   </label>
@@ -420,10 +453,12 @@ export function ResidentAuthView({
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="0917-000-0000"
-                    className="w-full min-h-[44px] px-3.5 py-2 text-sm bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700"
+                    className={inputClass}
                   />
                   {fieldErrors.phone && (
-                    <p className="text-xs text-red-700 mt-1">{fieldErrors.phone}</p>
+                    <p className="text-xs font-semibold text-[#8D1B22] dark:text-[#E5989B] mt-1">
+                      {fieldErrors.phone}
+                    </p>
                   )}
                 </div>
               </div>
@@ -431,7 +466,7 @@ export function ResidentAuthView({
               <div>
                 <label
                   htmlFor="res-reg-address"
-                  className="block text-sm font-semibold text-slate-900 mb-1"
+                  className="block text-xs font-bold uppercase tracking-wider text-[#1F241D] dark:text-[#F2F0EA] mb-1"
                 >
                   Street / House Address
                 </label>
@@ -441,10 +476,12 @@ export function ResidentAuthView({
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
                   placeholder="House #, Street Name"
-                  className="w-full min-h-[44px] px-3.5 py-2 text-sm bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700"
+                  className={inputClass}
                 />
                 {fieldErrors.address && (
-                  <p className="text-xs text-red-700 mt-1">{fieldErrors.address}</p>
+                  <p className="text-xs font-semibold text-[#8D1B22] dark:text-[#E5989B] mt-1">
+                    {fieldErrors.address}
+                  </p>
                 )}
               </div>
 
@@ -452,7 +489,7 @@ export function ResidentAuthView({
                 <div>
                   <label
                     htmlFor="res-reg-email"
-                    className="block text-sm font-semibold text-slate-900 mb-1"
+                    className="block text-xs font-bold uppercase tracking-wider text-[#1F241D] dark:text-[#F2F0EA] mb-1"
                   >
                     Email Address
                   </label>
@@ -462,17 +499,19 @@ export function ResidentAuthView({
                     value={regEmail}
                     onChange={(e) => setRegEmail(e.target.value)}
                     placeholder="resident@example.ph"
-                    className="w-full min-h-[44px] px-3.5 py-2 text-sm bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700"
+                    className={inputClass}
                   />
                   {fieldErrors.email && (
-                    <p className="text-xs text-red-700 mt-1">{fieldErrors.email}</p>
+                    <p className="text-xs font-semibold text-[#8D1B22] dark:text-[#E5989B] mt-1">
+                      {fieldErrors.email}
+                    </p>
                   )}
                 </div>
 
                 <div>
                   <label
                     htmlFor="res-reg-password"
-                    className="block text-sm font-semibold text-slate-900 mb-1"
+                    className="block text-xs font-bold uppercase tracking-wider text-[#1F241D] dark:text-[#F2F0EA] mb-1"
                   >
                     Password
                   </label>
@@ -482,10 +521,12 @@ export function ResidentAuthView({
                     value={regPassword}
                     onChange={(e) => setRegPassword(e.target.value)}
                     placeholder="At least 6 characters"
-                    className="w-full min-h-[44px] px-3.5 py-2 text-sm bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700"
+                    className={inputClass}
                   />
                   {fieldErrors.password && (
-                    <p className="text-xs text-red-700 mt-1">{fieldErrors.password}</p>
+                    <p className="text-xs font-semibold text-[#8D1B22] dark:text-[#E5989B] mt-1">
+                      {fieldErrors.password}
+                    </p>
                   )}
                 </div>
               </div>
@@ -493,7 +534,7 @@ export function ResidentAuthView({
               <button
                 type="submit"
                 disabled={submitting}
-                className="w-full min-h-[44px] px-5 py-2.5 text-sm font-semibold text-white bg-blue-800 rounded-lg hover:bg-blue-900 disabled:opacity-60 transition-colors"
+                className="w-full min-h-[44px] px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider text-white bg-[#8D1B22] hover:bg-[#701319] transition-colors disabled:opacity-60"
               >
                 {submitting ? 'Creating Account...' : 'Create Resident Account'}
               </button>
@@ -502,12 +543,12 @@ export function ResidentAuthView({
         </div>
       </div>
 
-      <p className="text-xs text-center text-slate-500">
+      <p className="text-xs text-center text-[#565A51] dark:text-[#B4B9AE]">
         Are you a barangay official or secretary?{' '}
         <button
           type="button"
           onClick={onGoToStaffLogin}
-          className="font-semibold text-blue-800 hover:underline"
+          className="font-bold text-[#1F241D] dark:text-[#F2F0EA] underline underline-offset-4 hover:text-[#8D1B22] dark:hover:text-[#E5989B]"
         >
           Go to Barangay Staff Login
         </button>
